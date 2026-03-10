@@ -719,7 +719,9 @@
       from { opacity: 0; transform: translateY(-8px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .tx-left { display: flex; align-items: center; gap: 12px; }
+    .tx-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+    .tx-info { flex: 1; }
+    .tx-name { font-weight: 600; font-size: 0.92rem; margin-bottom: 3px; word-break: break-word; }
     .tx-icon {
       width: 38px; height: 38px;
       border-radius: 10px;
@@ -738,12 +740,19 @@
       padding: 2px 8px;
       border-radius: 20px;
     }
-    .tx-right { display: flex; align-items: center; gap: 14px; }
+    .cat-atm       { background: rgba(251,191,36,0.15);  color: #fbbf24; }
+    .cat-icon-atm  { background: rgba(251,191,36,0.2);  }
+    .cat-cash      { background: rgba(132,204,22,0.15);  color: #84cc16; }
+    .cat-icon-cash { background: rgba(132,204,22,0.2);  }
+    .tx-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; margin-left: 12px; }
     .tx-amount {
       font-family: 'Outfit', sans-serif;
       font-size: 1.05rem;
       font-weight: 700;
       letter-spacing: -0.3px;
+      width: 110px;
+      text-align: right;
+      white-space: nowrap;
     }
     .tx-amount.income { color: var(--green); }
     .tx-amount.expense { color: var(--red); }
@@ -759,6 +768,26 @@
       line-height: 1;
     }
     .btn-delete:hover { background: rgba(255,94,126,0.15); border-color: var(--red); color: var(--red); }
+    .cat-select-box {
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 26px 6px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.12);
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-color: rgba(255,255,255,0.05);
+      color: var(--text);
+      width: 140px;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+    .cat-select-box:hover { border-color: rgba(255,255,255,0.28); background-color: rgba(255,255,255,0.08); }
+    .cat-select-box option { background: #1a2540; color: #e2e8f0; }
 
     /* Empty state */
     .empty-state {
@@ -922,6 +951,8 @@
             <option value="health">❤️ Health</option>
             <option value="shopping">🛍 Shopping</option>
           </optgroup>
+          <option value="atm">🏧 ATM</option>
+          <option value="cash">💵 Cash</option>
           <option value="other">🔖 Other</option>
         </select>
       </div>
@@ -963,6 +994,8 @@
           <option value="housing">🏠 Housing</option>
           <option value="health">❤️ Health</option>
           <option value="shopping">🛍 Shopping</option>
+          <option value="atm">🏧 ATM</option>
+          <option value="cash">💵 Cash</option>
           <option value="other">🔖 Other</option>
         </select>
         <button class="btn-import" id="btn-import-main" onclick="openImportModal()">🏦 Import Statement</button>
@@ -1365,6 +1398,8 @@
     housing:    { icon: '🏠', label: 'Housing' },
     health:     { icon: '❤️',  label: 'Health' },
     shopping:   { icon: '🛍',  label: 'Shopping' },
+    atm:        { icon: '🏧', label: 'ATM' },
+    cash:       { icon: '💵', label: 'Cash' },
     other:      { icon: '🔖', label: 'Other' },
   };
 
@@ -1501,6 +1536,22 @@
   }
 
   // ── DELETE ──
+  function changeCat(id, sel) {
+    const tx = transactions.find(t => t.id === id);
+    if (!tx) return;
+    tx.cat = sel.value;
+    saveData();
+    const item  = sel.closest('.tx-item');
+    const icon  = item.querySelector('.tx-icon');
+    const badge = item.querySelector('.cat-badge');
+    const meta  = catMeta[tx.cat] || catMeta.other;
+    icon.className   = 'tx-icon cat-icon-' + tx.cat;
+    icon.textContent = meta.icon;
+    if (badge) { badge.className = 'cat-badge cat-' + tx.cat; badge.textContent = meta.label; }
+    renderSummary();
+    renderChart();
+  }
+
   function deleteTransaction(id) {
     transactions = transactions.filter(t => t.id !== id);
     save();
@@ -1560,7 +1611,7 @@
         <div class="tx-item">
           <div class="tx-left">
             <div class="tx-icon cat-icon-${t.cat}">${meta.icon}</div>
-            <div>
+            <div class="tx-info">
               <div class="tx-name">${escHtml(t.desc)}</div>
               <div class="tx-meta">
                 <span class="tx-date">${dateF}</span>
@@ -1569,6 +1620,9 @@
             </div>
           </div>
           <div class="tx-right">
+            <select class="cat-select-box" onchange="changeCat(${t.id},this)" title="Change category">
+              ${Object.entries(catMeta).map(function(e){var k=e[0],v=e[1];return '<option value="'+k+'"'+(t.cat===k?' selected':'')+'>'+v.icon+' '+v.label+'</option>';}).join('')}
+            </select>
             <div class="tx-amount ${t.type}">${t.type==='income' ? '+' : '-'}${fmt(t.amount)}</div>
             <button class="btn-delete" onclick="deleteTransaction(${t.id})" title="Delete">✕</button>
           </div>
@@ -1851,12 +1905,6 @@
   function autoCategory(desc) {
     const d = desc.toLowerCase();
 
-    // SBI UPI signal hierarchy (strong beats weak):
-    // Strong Credit: UPI/DRC, UPI/CR, UPI/REF, UPI/REVERSAL, NEFT/IMPS...CR, INTEREST CREDIT
-    // Strong Debit:  UPI/DRD, UPI/DR (standalone), NEFT/IMPS...DR, ATM WDL/CASH
-    // Weak Credit:   CSH DEP, CASH DEP  (DEP TFR is token bleed — NOT a signal alone)
-    // Weak Debit:    WDL TFR, POS
-    // Raw numeric ref (e.g. "531719024342 +CHI...") with no UPI prefix = debit (no strong credit)
     const strongCredit = /upi[\s\/](?:drc|cr(?!d)|ref|reversal)/i.test(d)
                       || /neft[^a-z]{0,10}cr|imps[^a-z]{0,10}cr/i.test(d)
                       || /interest\s*credit|\bint[\s\/]?cr\b/i.test(d);
@@ -1865,31 +1913,26 @@
                       || /atm[\s\.]?wdl|atm\s*cash/i.test(d);
     const weakCredit   = /csh[\s\/]?dep|cash[\s\/]?dep/i.test(d);
     const weakDebit    = /wdl[\s\/]?tfr|pos[\s\/]/i.test(d);
-
-    const resolvedType = strongCredit                      ? 'income'
-                       : strongDebit                       ? 'expense'
-                       : (weakCredit && !weakDebit)        ? 'income'
-                       : (weakDebit  && !weakCredit)       ? 'expense'
-                       : null;
-
-    // Extract merchant from SBI UPI string (handles DRC/DRD/CR/DR/REF/REVERSAL variants)
+    const resolvedType = strongCredit ? 'income' : strongDebit ? 'expense'
+                       : (weakCredit && !weakDebit) ? 'income'
+                       : (weakDebit && !weakCredit) ? 'expense' : null;
     const upiMerchant = desc.match(/upi[\s\/](?:drc|drd|cr|dr|ref|reversal)[\s\/][\w\d]*[\s\/](.+)/i)?.[1]?.toLowerCase() || '';
     const allText = d + ' ' + upiMerchant;
+    const fin = (cat, hint) => ({ cat, type: resolvedType || hint });
 
-    const fin = (cat, fallbackType) => ({ cat, type: resolvedType || fallbackType });
-
-    if (/salary|sal.?cr|payroll|ctc|stipend/i.test(allText))                return fin('salary',    'income');
-    if (/freelance|invoice|client.?pay|upwork|fiverr/i.test(allText))       return fin('freelance', 'income');
-    if (/dividend|int.?cr|fd.?int|mutual.?fund|nse|bse|zerodha|groww|interest.?earned/i.test(allText)) return fin('investment','income');
-    if (/refund|cashback|reward/i.test(allText))                             return fin('other',     'income');
-
-    if (/swiggy|zomato|domino|pizza|restaurant|café|cafe|food|dining|burger|kfc|mcdonald|subway|blinkit|bigbasket|grocer|dunzo|zepto|supermo/i.test(allText)) return fin('food',     'expense');
-    if (/uber|ola|rapido|metro|irctc|train|flight|bus|petrol|fuel|toll|parking|fastag|cab/i.test(allText))                                                    return fin('transport','expense');
-    if (/rent|housing|maintenance|society|electricity|water|gas.?bill|bijli|apartment|bescom|bwssb|mahanagar/i.test(allText))                                  return fin('housing',  'expense');
-    if (/hospital|pharmacy|medical|doctor|apollo|health|medicine|lab|pathology|chemist|netmeds|1mg|practo/i.test(allText))                                     return fin('health',   'expense');
-    if (/amazon|flipkart|myntra|meesho|shopping|purchase|pos|retail|mall|store|mart|ajio|nykaa/i.test(allText))                                                return fin('shopping', 'expense');
-    if (/netflix|hotstar|prime|spotify|jio|airtel|bsnl|vodafone|recharge|subscription|tata.?play/i.test(allText))                                             return fin('other',    'expense');
-
+    // ATM withdrawal → 'atm' category (the raw bank record of cash taken out)
+    // User then manually adds 'cash' category entries for what they spent it on
+    if (/atm[\s\.]?wdl|atm\s*cash/i.test(allText))                                                                                                              return fin('atm',       'expense');
+    if (/swiggy|zomato|domino|pizza|restaurant|caf[eé]|food|dining|burger|kfc|mcdonald|subway|blinkit|bigbasket|grocer|dunzo|zepto|supermo/i.test(allText))       return fin('food',      'expense');
+    if (/uber|ola|rapido|metro|irctc|train|flight|bus|petrol|fuel|toll|parking|fastag|cab/i.test(allText))                                                         return fin('transport', 'expense');
+    if (/rent|housing|maintenance|society|electricity|water|gas.?bill|bijli|apartment|bescom|bwssb|mahanagar/i.test(allText))                                      return fin('housing',   'expense');
+    if (!(/pine[\s]?lab|pinelabs/i.test(allText)) && /hospital|pharmacy|medical|doctor|apollo|\bhealth\b|medicine|\blab\b|pathology|chemist|netmeds|1mg|practo/i.test(allText)) return fin('health', 'expense');
+    if (/amazon|flipkart|myntra|meesho|shopping|purchase|pos|retail|mall|store|mart|ajio|nykaa/i.test(allText))                                                    return fin('shopping',  'expense');
+    if (/netflix|hotstar|prime|spotify|jio|airtel|bsnl|vodafone|recharge|subscription|tata.?play/i.test(allText))                                                 return fin('other',     'expense');
+    if (/\bsalary\b|\bsal\b[\s_]?cr|\bpayroll\b|\bctc\b|\bstipend\b/i.test(allText))                                                                          return fin('salary',    'income');
+    if (/freelance|invoice|client.?pay|upwork|fiverr/i.test(allText))                                                                                              return fin('freelance', 'income');
+    if (/dividend|int.?cr|fd.?int|mutual.?fund|nse|bse|zerodha|groww|interest.?earned/i.test(allText))                                                            return fin('investment','income');
+    if (/refund|cashback|reward/i.test(allText))                                                                                                                    return fin('other',     'income');
     if (resolvedType) return { cat: 'other', type: resolvedType };
     return null;
   }
@@ -2358,11 +2401,6 @@
       const date = parseIndianDate(postDate);
       if (!date) continue;
 
-      // Strong Credit: UPI/DRC, UPI/CR, UPI/REF, UPI/REVERSAL, NEFT/IMPS..CR, INTEREST CREDIT
-      // Strong Debit:  UPI/DRD, UPI/DR (standalone), NEFT/IMPS..DR, ATM WDL/CASH
-      // Weak Credit:   CSH DEP  (DEP TFR alone is NOT reliable — common token bleed)
-      // Weak Debit:    WDL TFR, POS
-      // Raw numeric ref with no UPI prefix → no strong signal → falls to weak or autoCat default
       const strongCredit = /upi[\s\/](?:drc|cr(?!d)|ref|reversal)/i.test(desc)
                         || /neft[^a-z]{0,10}cr|imps[^a-z]{0,10}cr/i.test(desc)
                         || /interest\s*credit|\bint[\s\/]?cr\b/i.test(desc);
@@ -2371,10 +2409,8 @@
                         || /atm[\s\.]?wdl|atm\s*cash/i.test(desc);
       const weakCredit   = /csh[\s\/]?dep|cash[\s\/]?dep/i.test(desc);
       const weakDebit    = /wdl[\s\/]?tfr|pos[\s\/]/i.test(desc);
-
       const isCredit = strongCredit || (!strongDebit && weakCredit && !weakDebit);
       const isDebit  = !isCredit && (strongDebit || weakDebit);
-
       const autoCat = autoCategory(desc);
       const type = isDebit ? 'expense' : isCredit ? 'income' : (autoCat?.type || 'expense');
       const cat  = autoCat?.cat || 'other';
