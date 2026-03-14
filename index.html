@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>💰 Finance Tracker</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <!-- Firebase SDKs must be in <head> so they are defined before ANY inline script runs -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -720,8 +724,6 @@
       to   { opacity: 1; transform: translateY(0); }
     }
     .tx-left { display: flex; align-items: center; gap: 12px; flex: 1; }
-    .tx-info { flex: 1; }
-    .tx-name { font-weight: 600; font-size: 0.92rem; margin-bottom: 3px; word-break: break-word; }
     .tx-icon {
       width: 38px; height: 38px;
       border-radius: 10px;
@@ -740,20 +742,8 @@
       padding: 2px 8px;
       border-radius: 20px;
     }
-    .cat-atm       { background: rgba(251,191,36,0.15);  color: #fbbf24; }
-    .cat-icon-atm  { background: rgba(251,191,36,0.2);  }
-    .cat-cash      { background: rgba(132,204,22,0.15);  color: #84cc16; }
-    .cat-icon-cash { background: rgba(132,204,22,0.2);  }
     .tx-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; margin-left: 12px; }
-    .tx-amount {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.05rem;
-      font-weight: 700;
-      letter-spacing: -0.3px;
-      width: 110px;
-      text-align: right;
-      white-space: nowrap;
-    }
+    .tx-amount { font-family:'Outfit',sans-serif; font-size:1.05rem; font-weight:700; letter-spacing:-.3px; width:110px; text-align:right; white-space:nowrap; }
     .tx-amount.income { color: var(--green); }
     .tx-amount.expense { color: var(--red); }
     .btn-delete {
@@ -768,26 +758,7 @@
       line-height: 1;
     }
     .btn-delete:hover { background: rgba(255,94,126,0.15); border-color: var(--red); color: var(--red); }
-    .cat-select-box {
-      font-size: 0.78rem;
-      font-weight: 600;
-      padding: 6px 26px 6px 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.12);
-      cursor: pointer;
-      outline: none;
-      appearance: none;
-      -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 8px center;
-      background-color: rgba(255,255,255,0.05);
-      color: var(--text);
-      width: 140px;
-      transition: border-color 0.15s, background-color 0.15s;
-    }
-    .cat-select-box:hover { border-color: rgba(255,255,255,0.28); background-color: rgba(255,255,255,0.08); }
-    .cat-select-box option { background: #1a2540; color: #e2e8f0; }
+    .filter-select { width:auto; padding:8px 12px; font-size:.82rem; }
 
     /* Empty state */
     .empty-state {
@@ -808,6 +779,8 @@
     .cat-investment { background: rgba(244,114,182,0.15); color: #f472b6; }
     .cat-shopping   { background: rgba(255,184,48,0.15); color: #ffb830; }
     .cat-other      { background: rgba(122,138,160,0.15); color: #7a8aa0; }
+    .cat-atm        { background: rgba(251,191,36,0.15);  color: #fbbf24; }
+    .cat-cash       { background: rgba(132,204,22,0.15);  color: #84cc16; }
 
     .cat-icon-food       { background: rgba(251,146,60,0.2); }
     .cat-icon-transport  { background: rgba(79,158,255,0.2); }
@@ -818,6 +791,8 @@
     .cat-icon-investment { background: rgba(244,114,182,0.2); }
     .cat-icon-shopping   { background: rgba(255,184,48,0.2); }
     .cat-icon-other      { background: rgba(122,138,160,0.2); }
+    .cat-icon-atm        { background: rgba(251,191,36,0.2);  }
+    .cat-icon-cash       { background: rgba(132,204,22,0.2);  }
 
     /* Toast */
     .toast {
@@ -847,10 +822,204 @@
       .content-grid { grid-template-columns: 1fr; }
       header { padding: 16px 20px; }
     }
+
+    /* ══════ AUTH ══════ */
+    #auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px}
+    #auth-screen.hidden{display:none}
+    .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:44px 48px;width:100%;max-width:440px;position:relative;overflow:hidden}
+    .auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#4f9eff,#a78bfa,#f472b6)}
+    .auth-logo{font-size:2.4rem;text-align:center;margin-bottom:6px}
+    .auth-title{font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;text-align:center;letter-spacing:-.5px;margin-bottom:4px}
+    .auth-sub{font-size:.83rem;color:var(--muted);text-align:center;margin-bottom:28px}
+    .auth-tabs{display:flex;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:24px;gap:4px}
+    .auth-tab{flex:1;padding:9px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .18s}
+    .auth-tab.active{background:var(--surface);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+    .auth-field{margin-bottom:14px}
+    .auth-field label{display:block;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px}
+    .auth-field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.95rem;padding:11px 14px;outline:none;transition:border-color .15s,box-shadow .15s}
+    .auth-field input:focus{border-color:#4f9eff;box-shadow:0 0 0 3px rgba(79,158,255,.12)}
+    .auth-field input::placeholder{color:var(--muted);opacity:.55}
+    .auth-btn{width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#4f9eff,#a78bfa);color:#fff;font-family:'Outfit',sans-serif;font-size:.97rem;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .18s,transform .18s}
+    .auth-btn:hover{opacity:.9;transform:translateY(-1px)}
+    .auth-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:.78rem}
+    .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+    .auth-google-btn{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:border-color .15s,background .15s}
+    .auth-google-btn:hover{border-color:rgba(255,255,255,.3);background:var(--surface)}
+    .auth-google-btn:disabled{opacity:.45;cursor:not-allowed}
+    .auth-error{background:rgba(255,94,126,.12);border:1px solid rgba(255,94,126,.3);border-radius:8px;color:#ff5e7e;font-size:.82rem;padding:10px 14px;margin-bottom:14px;display:none}
+    .auth-error.visible{display:block}
+    .auth-success{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);border-radius:8px;color:#00e5a0;font-size:.82rem;padding:10px 14px;margin-bottom:14px;display:none}
+    .auth-success.visible{display:block}
+    .auth-switch{text-align:center;color:var(--muted);font-size:.82rem;margin-top:16px}
+    .auth-switch span{color:#4f9eff;cursor:pointer;font-weight:700}
+    .auth-switch span:hover{text-decoration:underline}
+    .auth-loading{display:none;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:.85rem;padding:8px 0}
+    .auth-spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:#4f9eff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .user-pill{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 14px 5px 6px;cursor:pointer;transition:border-color .15s;position:relative}
+    .user-pill:hover{border-color:rgba(255,255,255,.25)}
+    .user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4f9eff,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden}
+    .user-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+    .user-email-short{font-size:.78rem;font-weight:600;color:var(--text);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .user-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:6px;min-width:220px;box-shadow:0 12px 32px rgba(0,0,0,.5);display:none;z-index:9000}
+    .user-menu.open{display:block}
+    .user-menu-info{padding:10px 12px 12px;border-bottom:1px solid var(--border);margin-bottom:6px}
+    .user-menu-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:3px}
+    .user-menu-val{font-size:.82rem;color:var(--text);word-break:break-all}
+    .user-menu-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:.83rem;font-weight:600;color:var(--text);cursor:pointer;transition:background .12s;border:none;background:none;width:100%;text-align:left;font-family:'Outfit',sans-serif}
+    .user-menu-item:hover{background:var(--surface2)}
+    .user-menu-item.danger{color:var(--red)}
+    .user-menu-item.danger:hover{background:rgba(255,94,126,.1)}
+    .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-left:2px;vertical-align:middle}
+    .sync-dot.syncing{background:#fbbf24;animation:pulse 1s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+    .cat-atm{background:rgba(251,191,36,.15);color:#fbbf24}
+    .cat-cash{background:rgba(132,204,22,.15);color:#84cc16}
+    .cat-icon-atm{background:rgba(251,191,36,.2)}
+    .cat-icon-cash{background:rgba(132,204,22,.2)}
+    .cat-select-box{font-size:.78rem;font-weight:600;padding:6px 26px 6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-color:rgba(255,255,255,.05);color:var(--text);width:140px;transition:border-color .15s,background-color .15s}
+    .cat-select-box:hover{border-color:rgba(255,255,255,.28);background-color:rgba(255,255,255,.08)}
+    .cat-select-box option{background:#1a2540;color:#e2e8f0}
+    .tx-info{flex:1}
+    .sort-select{border-color:rgba(99,179,237,.35);color:#7ec8f7}
+    .date-range-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px 20px;margin-bottom:32px;position:relative;overflow:hidden}
+    .date-range-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#a78bfa,#f472b6)}
+    .date-range-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+    .date-range-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-right:auto}
+    .date-preset-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.78rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap}
+    .date-preset-btn:hover{border-color:#a78bfa;color:#a78bfa}
+    .date-preset-btn.active{background:rgba(167,139,250,.15);border-color:#a78bfa;color:#a78bfa}
+    .date-range-inputs{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .date-range-inputs input[type=date]{background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.85rem;padding:7px 12px;outline:none;transition:border-color .15s;cursor:pointer}
+    .date-range-inputs input[type=date]:focus{border-color:#a78bfa}
+    .date-range-inputs input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.6);cursor:pointer}
+    .date-range-sep{color:var(--muted);font-size:.85rem;font-weight:600}
+    .date-range-summary{font-size:.82rem;color:var(--muted);margin-left:auto;white-space:nowrap}
+    .date-range-summary strong{color:var(--text)}
+    .date-clear-btn{padding:5px 11px;border-radius:20px;border:1px solid rgba(255,94,126,.3);background:transparent;color:var(--red);font-size:.75rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .15s}
+    .date-clear-btn:hover{background:rgba(255,94,126,.1)}
+    .preset-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.78rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap}
+    .preset-btn:hover{border-color:#a78bfa;color:#a78bfa}
+    .preset-btn.active{background:rgba(167,139,250,.15);border-color:#a78bfa;color:#a78bfa}
+
+    /* ══════ PROFILE MODAL ══════ */
+    .profile-overlay{position:fixed;inset:0;background:rgba(5,8,20,.88);backdrop-filter:blur(8px);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
+    .profile-overlay.active{opacity:1;pointer-events:all}
+    .profile-modal{background:#13192a;border:1px solid rgba(79,158,255,.2);border-radius:20px;width:100%;max-width:660px;max-height:92vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.75);transform:translateY(22px) scale(.97);transition:transform .25s}
+    .profile-overlay.active .profile-modal{transform:translateY(0) scale(1)}
+    .profile-modal::-webkit-scrollbar{width:4px}
+    .profile-modal::-webkit-scrollbar-thumb{background:rgba(79,158,255,.25);border-radius:4px}
+
+    /* hero banner */
+    .profile-banner{height:110px;background:linear-gradient(135deg,#0f2a5a 0%,#1a0f4a 50%,#0f2a3a 100%);position:relative;border-radius:20px 20px 0 0;overflow:hidden}
+    .profile-banner::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+    .profile-avatar-wrap{position:absolute;bottom:-36px;left:32px}
+    .profile-avatar-big{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#4f9eff,#a78bfa);border:4px solid #13192a;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:#fff;overflow:hidden;cursor:pointer;position:relative;transition:filter .2s}
+    .profile-avatar-big:hover{filter:brightness(.8)}
+    .profile-avatar-big img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+    .profile-avatar-edit{position:absolute;inset:0;background:rgba(0,0,0,.45);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .18s;font-size:.75rem;font-weight:700;color:#fff;letter-spacing:.3px}
+    .profile-avatar-big:hover .profile-avatar-edit{opacity:1}
+    .profile-avatar-input{position:absolute;inset:0;opacity:0;cursor:pointer;border-radius:50%}
+
+    .profile-header-row{display:flex;align-items:flex-start;justify-content:space-between;padding:48px 28px 0}
+    .profile-close-btn{background:none;border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .profile-close-btn:hover{background:rgba(255,94,126,.15);border-color:var(--red);color:var(--red)}
+
+    .profile-body{padding:20px 28px 32px}
+
+    /* section headings */
+    .profile-section{margin-bottom:28px}
+    .profile-section-title{font-family:'Outfit',sans-serif;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .profile-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+    /* stat pills row */
+    .profile-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+    .profile-stat{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 12px;text-align:center}
+    .profile-stat-val{font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;color:var(--text)}
+    .profile-stat-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:3px}
+
+    /* form fields inside profile */
+    .profile-field{margin-bottom:14px}
+    .profile-field label{display:block;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:6px}
+    .profile-field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .15s,box-shadow .15s}
+    .profile-field input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,158,255,.12)}
+    .profile-field input:disabled{opacity:.5;cursor:not-allowed}
+    .profile-field input::placeholder{color:var(--muted);opacity:.5}
+    .profile-field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+    /* save / action buttons */
+    .btn-profile-save{padding:10px 22px;background:linear-gradient(135deg,#4f9eff,#a78bfa);border:none;border-radius:8px;color:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:opacity .18s,transform .15s}
+    .btn-profile-save:hover{opacity:.88;transform:translateY(-1px)}
+    .btn-profile-save:disabled{opacity:.4;cursor:not-allowed;transform:none}
+    .btn-profile-sec{padding:10px 22px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .15s}
+    .btn-profile-sec:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
+
+    /* danger zone */
+    .danger-zone{background:rgba(255,94,126,.05);border:1px solid rgba(255,94,126,.2);border-radius:12px;padding:20px 22px}
+    .danger-zone-title{font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:800;color:var(--red);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+    .danger-zone-desc{font-size:.8rem;color:var(--muted);line-height:1.55;margin-bottom:14px}
+    .btn-danger{padding:10px 22px;background:rgba(255,94,126,.12);border:1px solid rgba(255,94,126,.35);border-radius:8px;color:var(--red);font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .2s}
+    .btn-danger:hover{background:rgba(255,94,126,.22);border-color:var(--red)}
+
+    /* inline status messages */
+    .profile-msg{border-radius:8px;padding:9px 14px;font-size:.8rem;font-weight:600;margin-bottom:12px;display:none}
+    .profile-msg.error{background:rgba(255,94,126,.12);border:1px solid rgba(255,94,126,.3);color:#ff5e7e}
+    .profile-msg.success{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);color:#00e5a0}
+    .profile-msg.visible{display:block}
+
+    /* ── REAUTH MODAL ── */
+    .reauth-overlay{position:fixed;inset:0;background:rgba(5,8,20,.92);backdrop-filter:blur(8px);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+    .reauth-overlay.active{opacity:1;pointer-events:all}
+    .reauth-modal{background:#13192a;border:1px solid rgba(255,94,126,.3);border-radius:16px;width:100%;max-width:420px;padding:32px 36px;box-shadow:0 24px 60px rgba(0,0,0,.7);transform:translateY(16px);transition:transform .2s}
+    .reauth-overlay.active .reauth-modal{transform:translateY(0)}
+    .reauth-title{font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:800;margin-bottom:6px;background:linear-gradient(90deg,#ff5e7e,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .reauth-sub{font-size:.8rem;color:var(--muted);margin-bottom:20px;line-height:1.5}
+    .reauth-field{margin-bottom:14px}
+    .reauth-field label{display:block;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:6px}
+    .reauth-field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:.9rem;outline:none;transition:border-color .15s}
+    .reauth-field input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(255,94,126,.12)}
+    .reauth-msg{background:rgba(255,94,126,.12);border:1px solid rgba(255,94,126,.3);border-radius:8px;color:#ff5e7e;font-size:.8rem;padding:9px 14px;margin-bottom:12px;display:none}
+    .reauth-msg.visible{display:block}
+    .reauth-actions{display:flex;gap:10px;margin-top:4px}
+
   </style>
 </head>
 <body>
 
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">💸</div>
+    <div class="auth-title">FinanceTrack</div>
+    <div class="auth-sub">Sign in to access your personal finance dashboard</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login"  onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab"        id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+    <div id="auth-success" class="auth-success"></div>
+    <button class="auth-google-btn" id="btn-google" onclick="authGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.5 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.5 29.4 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.3 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.3C9.6 35.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.3 5.6l6.2 5.2C41.1 35.2 44 30 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
+    <div class="auth-divider">or</div>
+    <div id="form-login">
+      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')authLogin()"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')authLogin()"></div>
+      <button class="auth-btn" id="btn-login" onclick="authLogin()">Sign In →</button>
+      <div class="auth-switch">Forgot password? <span onclick="authResetPassword()">Send reset email</span></div>
+    </div>
+    <div id="form-signup" style="display:none">
+      <div class="auth-field"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')authSignup()"></div>
+      <div class="auth-field"><label>Password</label><input type="password" id="signup-pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')authSignup()"></div>
+      <div class="auth-field"><label>Confirm Password</label><input type="password" id="signup-pass2" placeholder="Repeat password" onkeydown="if(event.key==='Enter')authSignup()"></div>
+      <button class="auth-btn" id="btn-signup" onclick="authSignup()">Create Account →</button>
+    </div>
+    <div id="auth-loading" class="auth-loading"><div class="auth-spinner"></div><span id="auth-loading-text">Please wait…</span></div>
+  </div>
+</div>
+
+<div id="main-app" style="display:none">
 <header>
   <div class="logo">💸 FinanceTrack</div>
   <div class="header-right">
@@ -872,6 +1041,18 @@
       </div>
     </div>
     <div class="header-date" id="header-date"></div>
+    <div class="user-pill" id="user-pill" style="display:none" onclick="toggleUserMenu()">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span class="user-email-short" id="user-email-short"></span>
+      <div class="user-menu" id="user-menu">
+        <div class="user-menu-info">
+          <div class="user-menu-label">Signed in as</div>
+          <div class="user-menu-val" id="user-menu-email">—</div>
+        </div>
+        <button class="user-menu-item" onclick="openProfile();closeUserMenu()">👤 Profile &amp; Settings</button>
+        <button class="user-menu-item danger" onclick="authSignOut()">🚪 Sign Out</button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -975,16 +1156,41 @@
   </div>
 
   <!-- Transaction List -->
+  <!-- Date Range Filter -->
+  <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:18px 24px; margin-bottom:20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <span style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); white-space:nowrap;">📅 Date Range</span>
+    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+      <button id="preset-all" class="preset-btn active" onclick="setPreset('all')">All Time</button>
+      <button id="preset-30d" class="preset-btn" onclick="setPreset('30d')">30 Days</button>
+      <button id="preset-3m"  class="preset-btn" onclick="setPreset('3m')">3 Months</button>
+      <button id="preset-6m"  class="preset-btn" onclick="setPreset('6m')">6 Months</button>
+      <button id="preset-1y"  class="preset-btn" onclick="setPreset('1y')">This Year</button>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <input type="date" id="date-from" style="width:150px; padding:7px 10px; font-size:0.82rem;" onchange="onDateChange()" />
+      <span style="color:var(--muted); font-size:0.85rem;">→</span>
+      <input type="date" id="date-to"   style="width:150px; padding:7px 10px; font-size:0.82rem;" onchange="onDateChange()" />
+      <button id="date-clear-btn" onclick="setPreset('all')" style="display:none; background:rgba(255,94,126,0.12); border:1px solid rgba(255,94,126,0.35); color:var(--red); border-radius:7px; padding:7px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;">✕ Clear</button>
+    </div>
+    <span id="date-range-summary" style="font-size:0.8rem; color:var(--muted); margin-left:auto;">Showing <strong>all transactions</strong></span>
+  </div>
+
   <div class="transactions-panel">
     <div class="tx-header">
       <div class="panel-title" style="margin-bottom:0"><span>📋</span> Transactions</div>
       <div class="tx-controls">
+        <select class="filter-select sort-select" id="filter-sort" onchange="renderList()">
+          <option value="newest">⬇ Newest First</option>
+          <option value="oldest">⬆ Oldest First</option>
+          <option value="highest">↕ Highest Amount</option>
+          <option value="lowest">↕ Lowest Amount</option>
+        </select>
         <select class="filter-select" id="filter-type" onchange="renderList()">
           <option value="all">All Types</option>
           <option value="income">Income Only</option>
           <option value="expense">Expense Only</option>
         </select>
-        <select class="filter-select" id="filter-cat" onchange="renderList()">
+        <select class="filter-select" id="filter-cat" onchange="renderStats();renderList()">
           <option value="all">All Categories</option>
           <option value="salary">💼 Salary</option>
           <option value="freelance">💻 Freelance</option>
@@ -1220,6 +1426,142 @@
   </div>
 </div>
 
+<!-- ── PROFILE MODAL ── -->
+<div class="profile-overlay" id="profile-overlay" onclick="handleProfileOverlayClick(event)">
+  <div class="profile-modal" id="profile-modal">
+
+    <!-- Banner + avatar -->
+    <div class="profile-banner">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar-big" id="profile-avatar-big" title="Change photo">
+          <span id="profile-avatar-initials">?</span>
+          <img id="profile-avatar-img" src="" alt="" style="display:none"/>
+          <div class="profile-avatar-edit">📷 Change</div>
+          <input type="file" class="profile-avatar-input" id="profile-avatar-file" accept="image/*" onchange="handleAvatarChange(event)"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-header-row">
+      <div style="padding-left:100px;">
+        <div style="font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;color:var(--text)" id="profile-display-title">—</div>
+        <div style="font-size:.8rem;color:var(--muted);margin-top:2px" id="profile-email-title">—</div>
+      </div>
+      <button class="profile-close-btn" onclick="closeProfile()">✕</button>
+    </div>
+
+    <div class="profile-body">
+
+      <!-- Account stats -->
+      <div class="profile-stats" id="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-val" id="pstat-txn">0</div>
+          <div class="profile-stat-lbl">Transactions</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-val" style="color:var(--green)" id="pstat-income">₹0</div>
+          <div class="profile-stat-lbl">Total Income</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-val" style="color:var(--red)" id="pstat-expense">₹0</div>
+          <div class="profile-stat-lbl">Total Expenses</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-val" style="color:var(--blue)" id="pstat-since">—</div>
+          <div class="profile-stat-lbl">Member Since</div>
+        </div>
+      </div>
+
+      <!-- ── Personal Info ── -->
+      <div class="profile-section">
+        <div class="profile-section-title">👤 Personal Info</div>
+        <div id="profile-info-msg" class="profile-msg"></div>
+        <div class="profile-field-row">
+          <div class="profile-field">
+            <label>Display Name</label>
+            <input type="text" id="profile-name" placeholder="Your name" maxlength="40"/>
+          </div>
+          <div class="profile-field">
+            <label>Email Address</label>
+            <input type="email" id="profile-email" disabled/>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button class="btn-profile-save" id="btn-save-name" onclick="saveDisplayName()">Save Name</button>
+        </div>
+      </div>
+
+      <!-- ── Change Password ── -->
+      <div class="profile-section">
+        <div class="profile-section-title">🔒 Change Password</div>
+        <div id="profile-pass-msg" class="profile-msg"></div>
+        <div id="google-provider-note" style="display:none;background:rgba(79,158,255,.07);border:1px solid rgba(79,158,255,.18);border-radius:8px;padding:10px 14px;font-size:.8rem;color:var(--muted);margin-bottom:12px;">
+          ℹ️ Your account uses Google Sign-In — password change is not available.
+        </div>
+        <div id="password-change-form">
+          <div class="profile-field">
+            <label>Current Password</label>
+            <input type="password" id="profile-cur-pass" placeholder="Current password"/>
+          </div>
+          <div class="profile-field-row">
+            <div class="profile-field">
+              <label>New Password</label>
+              <input type="password" id="profile-new-pass" placeholder="Min 6 characters"/>
+            </div>
+            <div class="profile-field">
+              <label>Confirm New Password</label>
+              <input type="password" id="profile-new-pass2" placeholder="Repeat new password"/>
+            </div>
+          </div>
+          <button class="btn-profile-save" id="btn-save-pass" onclick="changePassword()">Update Password</button>
+        </div>
+      </div>
+
+      <!-- ── Preferences ── -->
+      <div class="profile-section">
+        <div class="profile-section-title">⚙️ Preferences</div>
+        <div class="profile-field-row">
+          <div class="profile-field">
+            <label>Default Currency</label>
+            <input type="text" id="profile-cur-display" disabled style="cursor:default"/>
+          </div>
+          <div class="profile-field">
+            <label>Total Data Points</label>
+            <input type="text" id="profile-data-size" disabled style="cursor:default"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Danger Zone ── -->
+      <div class="danger-zone">
+        <div class="danger-zone-title">⚠️ Danger Zone</div>
+        <div class="danger-zone-desc">
+          Deleting your account is <strong style="color:var(--text)">permanent and irreversible</strong>. All your transactions, settings, and data stored in FinanceTrack will be erased immediately. This cannot be undone.
+        </div>
+        <button class="btn-danger" onclick="openReauth('delete')">🗑 Delete My Account</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── RE-AUTH MODAL (used for password change + account deletion) ── -->
+<div class="reauth-overlay" id="reauth-overlay" onclick="handleReauthOverlayClick(event)">
+  <div class="reauth-modal">
+    <div class="reauth-title" id="reauth-title">Confirm Your Identity</div>
+    <div class="reauth-sub" id="reauth-sub">For security, please enter your current password to continue.</div>
+    <div class="reauth-msg" id="reauth-msg"></div>
+    <div class="reauth-field">
+      <label>Password</label>
+      <input type="password" id="reauth-pass" placeholder="Your current password" onkeydown="if(event.key==='Enter')submitReauth()"/>
+    </div>
+    <div class="reauth-actions">
+      <button class="btn-profile-sec" onclick="closeReauth()" style="flex:1">Cancel</button>
+      <button class="btn-danger" onclick="submitReauth()" style="flex:2" id="btn-reauth-submit">Confirm →</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1384,10 +1726,12 @@
   ];
 
   // ── STATE ──
-  let transactions = JSON.parse(localStorage.getItem('ft_transactions') || '[]');
-  let selectedType = 'income';
-  let chart = null;
-  let activeCurrency = CURRENCIES.find(c => c.code === (localStorage.getItem('ft_currency') || 'USD')) || CURRENCIES.find(c => c.code === 'USD');
+  const firebaseConfig={apiKey:"AIzaSyDBmdJcqNGcEHcDCfB-YLSgcY-R1pj7NPg",authDomain:"finance-manager8081.firebaseapp.com",databaseURL:"https://finance-manager8081-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"finance-manager8081",storageBucket:"finance-manager8081.firebasestorage.app",messagingSenderId:"832555669981",appId:"1:832555669981:web:51d16cf05a574a08acfe34"};
+  firebase.initializeApp(firebaseConfig);
+  const fbAuth=firebase.auth(), fbDb=firebase.database();
+  let currentUser=null, userDbRef=null, syncTimer=null;
+  let transactions=[], selectedType='income', chart=null;
+  let activeCurrency=CURRENCIES.find(c=>c.code==='INR')||CURRENCIES.find(c=>c.code==='USD');
 
   const catMeta = {
     salary:     { icon: '💼', label: 'Salary' },
@@ -1471,7 +1815,7 @@
 
   function changeCurrency(code) {
     activeCurrency = CURRENCIES.find(c => c.code === code) || activeCurrency;
-    localStorage.setItem('ft_currency', activeCurrency.code);
+    if(userDbRef)userDbRef.update({currency:activeCurrency.code});
     updateCurrencyBadge();
     closeCurDropdown();
     renderAll();
@@ -1535,34 +1879,29 @@
     toast(`🗑 Deleted ${count} transaction${count !== 1 ? 's' : ''}`);
   }
 
-  // ── DELETE ──
-  function changeCat(id, sel) {
-    const tx = transactions.find(t => t.id === id);
-    if (!tx) return;
-    tx.cat = sel.value;
-    saveData();
-    const item  = sel.closest('.tx-item');
-    const icon  = item.querySelector('.tx-icon');
-    const badge = item.querySelector('.cat-badge');
-    const meta  = catMeta[tx.cat] || catMeta.other;
-    icon.className   = 'tx-icon cat-icon-' + tx.cat;
-    icon.textContent = meta.icon;
-    if (badge) { badge.className = 'cat-badge cat-' + tx.cat; badge.textContent = meta.label; }
-    renderSummary();
-    renderChart();
+  // ── DELETE / CHANGE CAT ──
+  function changeCat(id,sel){
+    const tx=transactions.find(t=>t.id===id);if(!tx)return;
+    tx.cat=sel.value;save();
+    const item=sel.closest('.tx-item'),icon=item.querySelector('.tx-icon'),badge=item.querySelector('.cat-badge');
+    const meta=catMeta[tx.cat]||catMeta.other;
+    icon.className='tx-icon cat-icon-'+tx.cat;icon.textContent=meta.icon;
+    if(badge){badge.className='cat-badge cat-'+tx.cat;badge.textContent=meta.label;}
+    renderStats();renderChart();
   }
-
   function deleteTransaction(id) {
     transactions = transactions.filter(t => t.id !== id);
     save();
     toast('🗑 Transaction removed');
   }
 
-  // ── SAVE & RENDER ──
-  function save() {
-    localStorage.setItem('ft_transactions', JSON.stringify(transactions));
+  function save(){
     renderAll();
+    if(!userDbRef)return;
+    clearTimeout(syncTimer); setSyncDot('syncing');
+    syncTimer=setTimeout(()=>{userDbRef.set({transactions,currency:activeCurrency.code}).then(()=>setSyncDot('ok')).catch(()=>setSyncDot('ok'));},800);
   }
+  function setSyncDot(s){const d=document.getElementById('sync-dot');if(!d)return;d.className='sync-dot'+(s==='syncing'?' syncing':'');d.title=s==='syncing'?'Saving…':'All changes saved ✓';}
 
   function renderAll() {
     renderStats();
@@ -1571,29 +1910,58 @@
   }
 
   // ── STATS ──
+  // FIX 2: renderStats now reads filter-cat so the summary cards always
+  // match the currently selected category filter (was ignoring it before).
   function renderStats() {
-    const income  = transactions.filter(t => t.type === 'income');
-    const expense = transactions.filter(t => t.type === 'expense');
-    const totalIn  = income.reduce((s,t)  => s + t.amount, 0);
-    const totalOut = expense.reduce((s,t) => s + t.amount, 0);
-
-    document.getElementById('stat-balance').textContent = fmt(totalIn - totalOut);
-    document.getElementById('stat-income').textContent  = fmt(totalIn);
-    document.getElementById('stat-expense').textContent = fmt(totalOut);
-    document.getElementById('stat-income-count').textContent  = `${income.length} transaction${income.length!==1?'s':''}`;
-    document.getElementById('stat-expense-count').textContent = `${expense.length} transaction${expense.length!==1?'s':''}`;
+    const{from:drF,to:drT}=getDateRange();
+    const filterCat=document.getElementById('filter-cat')?.value||'all';
+    const income=transactions.filter(t=>
+      t.type==='income' &&
+      t.cat!=='cash' &&
+      (!drF||t.date>=drF) &&
+      (!drT||t.date<=drT) &&
+      (filterCat==='all'||t.cat===filterCat)
+    );
+    const expense=transactions.filter(t=>
+      t.type==='expense' &&
+      (!drF||t.date>=drF) &&
+      (!drT||t.date<=drT) &&
+      (filterCat==='all'||t.cat===filterCat)
+    );
+    const totalIn=income.reduce((s,t)=>s+t.amount,0),totalOut=expense.reduce((s,t)=>s+t.amount,0);
+    document.getElementById('stat-balance').textContent=fmt(totalIn-totalOut);
+    document.getElementById('stat-income').textContent=fmt(totalIn);
+    document.getElementById('stat-expense').textContent=fmt(totalOut);
+    document.getElementById('stat-income-count').textContent=`${income.length} transaction${income.length!==1?'s':''}`;
+    document.getElementById('stat-expense-count').textContent=`${expense.length} transaction${expense.length!==1?'s':''}`;
   }
 
   // ── LIST ──
+  // FIX 3: Removed the blanket cash exclusion rule. Cash transactions are
+  // now visible under "All Categories" just like any other category.
+  // The standard filterCat check already handles selective display correctly.
   function renderList() {
     const filterType = document.getElementById('filter-type').value;
     const filterCat  = document.getElementById('filter-cat').value;
     const el = document.getElementById('tx-list');
 
-    let filtered = transactions.filter(t => {
-      if (filterType !== 'all' && t.type !== filterType) return false;
-      if (filterCat  !== 'all' && t.cat  !== filterCat)  return false;
+    const sortBy=document.getElementById('filter-sort')?.value||'newest';
+    const{from:drF,to:drT}=getDateRange();
+    let filtered=transactions.filter(t=>{
+      if(filterType!=='all'&&t.type!==filterType)return false;
+      if(filterCat!=='all'&&t.cat!==filterCat)return false;
+      // REMOVED: the old `if(t.cat==='cash'&&filterCat!=='cash')return false;`
+      // that silently hid cash from every view except "Cash" filter.
+      if(drF&&t.date<drF)return false;
+      if(drT&&t.date>drT)return false;
       return true;
+    });
+    filtered.sort((a,b)=>{
+      if(sortBy==='newest')return b.date.localeCompare(a.date)||b.id-a.id;
+      if(sortBy==='oldest')return a.date.localeCompare(b.date)||a.id-b.id;
+      if(sortBy==='highest')return b.amount-a.amount;
+      if(sortBy==='lowest')return a.amount-b.amount;
+      return 0;
     });
 
     if (!filtered.length) {
@@ -1779,11 +2147,9 @@
   let currentFile = null;
 
   // ── BANK COLUMN SCHEMAS ──
-  // Each schema defines how to find date / description / debit / credit columns
   const BANK_SCHEMAS = {
     sbi: {
       name: 'State Bank of India',
-      // Real SBI Net Banking columns: Post Date | Value Date | Description | Cheque No/Reference | Debit | Credit | Balance
       detect: h => (
         h.some(c => /post.?date/i.test(c)) ||
         (h.some(c => /txn.?date/i.test(c)) && h.some(c => /ref.?no|cheque/i.test(c))) ||
@@ -1878,7 +2244,6 @@
     },
   };
 
-  // Generic fallback for "other" banks
   const GENERIC_SCHEMA = {
     name: 'Generic Bank',
     dateCol:   h => findCol(h, ['date','transaction date','txn date','tran date','value date']),
@@ -1893,7 +2258,6 @@
       const idx = headers.findIndex(h => h.toLowerCase().trim() === c.toLowerCase());
       if (idx !== -1) return idx;
     }
-    // partial match fallback
     for (const c of candidates) {
       const idx = headers.findIndex(h => h.toLowerCase().includes(c.toLowerCase()));
       if (idx !== -1) return idx;
@@ -1901,53 +2265,32 @@
     return -1;
   }
 
-  // ── AUTO-CATEGORIZE from description keywords ──
   function autoCategory(desc) {
     const d = desc.toLowerCase();
-
-    const strongCredit = /upi[\s\/](?:drc|cr(?!d)|ref|reversal)/i.test(d)
-                      || /neft[^a-z]{0,10}cr|imps[^a-z]{0,10}cr/i.test(d)
-                      || /interest\s*credit|\bint[\s\/]?cr\b/i.test(d);
-    const strongDebit  = /upi[\s\/](?:drd|dr(?![cd]))/i.test(d)
-                      || /neft[^a-z]{0,10}dr|imps[^a-z]{0,10}dr/i.test(d)
-                      || /atm[\s\.]?wdl|atm\s*cash/i.test(d);
-    const weakCredit   = /csh[\s\/]?dep|cash[\s\/]?dep/i.test(d);
-    const weakDebit    = /wdl[\s\/]?tfr|pos[\s\/]/i.test(d);
-    const resolvedType = strongCredit ? 'income' : strongDebit ? 'expense'
-                       : (weakCredit && !weakDebit) ? 'income'
-                       : (weakDebit && !weakCredit) ? 'expense' : null;
-    const upiMerchant = desc.match(/upi[\s\/](?:drc|drd|cr|dr|ref|reversal)[\s\/][\w\d]*[\s\/](.+)/i)?.[1]?.toLowerCase() || '';
-    const allText = d + ' ' + upiMerchant;
-    const fin = (cat, hint) => ({ cat, type: resolvedType || hint });
-
-    // ATM withdrawal → 'atm' category (the raw bank record of cash taken out)
-    // User then manually adds 'cash' category entries for what they spent it on
-    if (/atm[\s\.]?wdl|atm\s*cash/i.test(allText))                                                                                                              return fin('atm',       'expense');
-    if (/swiggy|zomato|domino|pizza|restaurant|caf[eé]|food|dining|burger|kfc|mcdonald|subway|blinkit|bigbasket|grocer|dunzo|zepto|supermo/i.test(allText))       return fin('food',      'expense');
-    if (/uber|ola|rapido|metro|irctc|train|flight|bus|petrol|fuel|toll|parking|fastag|cab/i.test(allText))                                                         return fin('transport', 'expense');
-    if (/rent|housing|maintenance|society|electricity|water|gas.?bill|bijli|apartment|bescom|bwssb|mahanagar/i.test(allText))                                      return fin('housing',   'expense');
-    if (!(/pine[\s]?lab|pinelabs/i.test(allText)) && /hospital|pharmacy|medical|doctor|apollo|\bhealth\b|medicine|\blab\b|pathology|chemist|netmeds|1mg|practo/i.test(allText)) return fin('health', 'expense');
-    if (/amazon|flipkart|myntra|meesho|shopping|purchase|pos|retail|mall|store|mart|ajio|nykaa/i.test(allText))                                                    return fin('shopping',  'expense');
-    if (/netflix|hotstar|prime|spotify|jio|airtel|bsnl|vodafone|recharge|subscription|tata.?play/i.test(allText))                                                 return fin('other',     'expense');
-    if (/\bsalary\b|\bsal\b[\s_]?cr|\bpayroll\b|\bctc\b|\bstipend\b/i.test(allText))                                                                          return fin('salary',    'income');
-    if (/freelance|invoice|client.?pay|upwork|fiverr/i.test(allText))                                                                                              return fin('freelance', 'income');
-    if (/dividend|int.?cr|fd.?int|mutual.?fund|nse|bse|zerodha|groww|interest.?earned/i.test(allText))                                                            return fin('investment','income');
-    if (/refund|cashback|reward/i.test(allText))                                                                                                                    return fin('other',     'income');
-    if (resolvedType) return { cat: 'other', type: resolvedType };
+    const upiM=desc.match(/upi[\s\/](?:drc|drd|cr|dr|ref|reversal)[\s\/][\w\d]*[\s\/](.+)/i)?.[1]?.toLowerCase()||'';
+    const allText=d+' '+upiM;
+    if(/atm[\s\.]?wdl|atm\s*cash/i.test(allText))                          return{cat:'atm',type:'expense'};
+    if(/swiggy|zomato|domino|pizza|restaurant|caf[eé]|food|dining|burger|kfc|mcdonald|subway|blinkit|bigbasket|grocer|dunzo|zepto|supermo/i.test(allText)) return{cat:'food',type:'expense'};
+    if(/uber|ola|rapido|metro|irctc|train|flight|bus|petrol|fuel|toll|parking|fastag|cab/i.test(allText))  return{cat:'transport',type:'expense'};
+    if(/rent|housing|maintenance|society|electricity|water|gas.?bill|bijli|apartment|bescom|bwssb|mahanagar/i.test(allText)) return{cat:'housing',type:'expense'};
+    if(!(/pine[\s]?lab|pinelabs/i.test(allText))&&/hospital|pharmacy|medical|doctor|apollo|\bhealth\b|medicine|\blab\b|pathology|chemist|netmeds|1mg|practo/i.test(allText)) return{cat:'health',type:'expense'};
+    if(/amazon|flipkart|myntra|meesho|shopping|purchase|pos|retail|mall|store|mart|ajio|nykaa/i.test(allText)) return{cat:'shopping',type:'expense'};
+    if(/netflix|hotstar|prime|spotify|jio|airtel|bsnl|vodafone|recharge|subscription|tata.?play/i.test(allText)) return{cat:'other',type:'expense'};
+    if(/\bsalary\b|\bsal\b[\s_]?cr|\bpayroll\b|\bctc\b|\bstipend\b/i.test(allText)) return{cat:'salary',type:'income'};
+    if(/freelance|invoice|client.?pay|upwork|fiverr/i.test(allText))         return{cat:'freelance',type:'income'};
+    if(/dividend|int.?cr|fd.?int|mutual.?fund|nse|bse|zerodha|groww|interest.?earned/i.test(allText)) return{cat:'investment',type:'income'};
+    if(/refund|cashback|reward/i.test(allText))                               return{cat:'other',type:'income'};
     return null;
   }
 
-  // ── PARSE DATE from various Indian bank formats ──
   function parseIndianDate(str) {
     if (!str) return null;
     str = str.trim().replace(/"/g,'');
-    // dd/mm/yyyy or dd-mm-yyyy
     let m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
     if (m) {
       const y = m[3].length === 2 ? '20' + m[3] : m[3];
       return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
     }
-    // dd mmm yyyy  e.g. 01 Jan 2024
     m = str.match(/^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{2,4})$/);
     if (m) {
       const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
@@ -1955,7 +2298,6 @@
       const y = m[3].length === 2 ? '20' + m[3] : m[3];
       if (mo) return `${y}-${mo}-${m[1].padStart(2,'0')}`;
     }
-    // dd-mmm-yy  e.g. 01-Jan-24
     m = str.match(/^(\d{1,2})-([A-Za-z]{3})-(\d{2,4})$/);
     if (m) {
       const months = {jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12'};
@@ -1963,20 +2305,17 @@
       const y = m[3].length === 2 ? '20' + m[3] : m[3];
       if (mo) return `${y}-${mo}-${m[1].padStart(2,'0')}`;
     }
-    // ISO already
     m = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (m) return `${m[1]}-${m[2]}-${m[3]}`;
     return null;
   }
 
-  // ── PARSE AMOUNT (remove commas, ₹, CR/DR suffix etc) ──
   function parseAmount(str) {
     if (!str && str !== 0) return 0;
     const n = parseFloat(String(str).replace(/[₹,\s"]/g,'').replace(/(CR|DR)$/i,'').trim());
     return isNaN(n) ? 0 : n;
   }
 
-  // ── PARSE CSV TEXT INTO ROWS ──
   function parseCSVText(text) {
     const lines = text.split(/\r?\n/).filter(l => l.trim());
     const rows = lines.map(line => {
@@ -1985,7 +2324,7 @@
       for (let i = 0; i < line.length; i++) {
         const ch = line[i];
         if (ch === '"') {
-          if (inQ && line[i + 1] === '"') { cur += '"'; i++; } // escaped quote ""
+          if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
           else { inQ = !inQ; }
         }
         else if (ch === ',' && !inQ) { cells.push(cur.trim()); cur = ''; }
@@ -1997,7 +2336,6 @@
     return rows;
   }
 
-  // ── DETECT BANK FROM HEADERS ──
   function detectBank(headers) {
     for (const [key, schema] of Object.entries(BANK_SCHEMAS)) {
       if (schema.detect && schema.detect(headers)) return { key, schema };
@@ -2005,7 +2343,9 @@
     return { key: 'other', schema: GENERIC_SCHEMA };
   }
 
-  // ── FIND HEADER ROW (skip cover page, summary, welcome lines) ──
+  // FIX 5: findHeaderRow now returns -1 when no header row is found instead
+  // of silently returning 0 (which treated the first data row as a header).
+  // The caller handles -1 with an explicit error message.
   function findHeaderRow(rows) {
     const strongSignals = [
       /^post.?date$/i, /^value.?date$/i, /^txn.?date$/i, /^transaction.?date$/i,
@@ -2021,8 +2361,6 @@
       const matchCount = cells.filter(c => strongSignals.some(re => re.test(c))).length;
       if (matchCount >= 2) return i;
 
-      // SBI specific: "Post Date" and "Value Date" may be adjacent rows if tolerance grouping still splits
-      // Also catch a row that has all three of date + description + (debit or credit) words anywhere in cells
       const joined = cells.join(' ').toLowerCase();
       if (
         /(post.?date|value.?date|txn.?date)/.test(joined) &&
@@ -2030,14 +2368,16 @@
       ) return i;
     }
 
-    // Last resort: looser scan
+    // Looser scan
     for (let i = 0; i < rows.length; i++) {
       const rowText = rows[i].join(' ').toLowerCase();
       if (/(debit|credit).*(date|narration|particulars|description)/i.test(rowText) && rows[i].length >= 3) {
         return i;
       }
     }
-    return 0;
+
+    // FIX 5: was `return 0` — now returns -1 so callers can detect failure explicitly.
+    return -1;
   }
 
   // ── MODAL CONTROL ──
@@ -2047,7 +2387,7 @@
     parsedImportRows = [];
     rawFileText = '';
     currentFileBuffer = null;
-    currentFile = null;                                          // FIX 1: reset stale file reference
+    currentFile = null;
     document.getElementById('csv-file-input').value = '';
     document.getElementById('file-chosen').style.display = 'none';
     document.getElementById('file-chosen').style.color = 'var(--green)';
@@ -2055,7 +2395,7 @@
     document.getElementById('password-section').style.display = 'none';
     document.getElementById('file-password').value = '';
     document.getElementById('btn-parse').disabled = true;
-    document.getElementById('account-info-card').style.display = 'none'; // FIX 4: hide stale account info
+    document.getElementById('account-info-card').style.display = 'none';
   }
   function closeImportModal() {
     document.getElementById('import-overlay').classList.remove('active');
@@ -2107,24 +2447,21 @@
     document.querySelectorAll('.bank-btn').forEach(b => b.classList.remove('selected'));
     document.getElementById(`bank-${key}`)?.classList.add('selected');
 
-    // Update main import button label
     const label = BANK_DISPLAY_NAMES[key] || 'Statement';
     document.getElementById('btn-import-main').innerHTML = `🏦 Import ${escHtml(label)}`;
 
-    // Update drop zone dynamically
     const info = BANK_DROP_INFO[key] || BANK_DROP_INFO.auto;
     document.getElementById('drop-icon').textContent  = info.icon;
     document.getElementById('drop-title').textContent = info.title;
     document.getElementById('drop-sub').innerHTML     = `or <span>click to browse</span> — ${info.sub}`;
 
-    // Update how-to guide if available
     const howToEl  = document.getElementById('how-to-steps');
     const howToBox = document.getElementById('how-to-box');
     if (info.howto && howToEl) {
       howToEl.innerHTML = info.howto.map(s => `<li>${s}</li>`).join('');
       if (howToBox) howToBox.style.display = 'block';
     } else if (howToBox) {
-      howToBox.style.display = 'none';   // FIX 6: always hide (and clear) when no howto steps
+      howToBox.style.display = 'none';
       if (howToEl) howToEl.innerHTML = '';
     }
   }
@@ -2171,7 +2508,6 @@
         fc.innerHTML = `✅ "${file.name}" ready (${(file.size/1024).toFixed(1)} KB)`;
         document.getElementById('password-section').style.display = 'block';
         document.getElementById('btn-parse').disabled = false;
-        // Auto-focus password field since SBI PDFs are almost always protected
         setTimeout(() => document.getElementById('file-password').focus(), 80);
       };
       reader.onerror = () => showStepTwoError(`❌ Could not read "${file.name}". The file may be corrupted.`);
@@ -2179,7 +2515,6 @@
     } else if (ext === 'xlsx' || ext === 'xls') {
       const reader = new FileReader();
       reader.onload = ev => {
-        // Store raw buffer; we'll use password at parse time
         currentFileBuffer = ev.target.result;
         fc.style.display = 'block';
         fc.innerHTML = `✅ "${file.name}" loaded as Excel (${(file.size/1024).toFixed(1)} KB)`;
@@ -2189,14 +2524,12 @@
       reader.onerror = () => showStepTwoError(`❌ Could not read "${file.name}". The file may be corrupted.`);
       reader.readAsArrayBuffer(file);
     } else {
-      // CSV / plain text
-      currentFileBuffer = null; // clear any stale PDF/XLSX buffer
+      currentFileBuffer = null;
       const reader = new FileReader();
       reader.onload = ev => {
         rawFileText = ev.target.result;
         fc.style.display = 'block';
         fc.innerHTML = `✅ "${file.name}" loaded (${(file.size/1024).toFixed(1)} KB)`;
-        // CSV files are never password protected — hide password section
         document.getElementById('password-section').style.display = 'none';
         document.getElementById('btn-parse').disabled = false;
       };
@@ -2205,7 +2538,6 @@
     }
   }
 
-  // ── XLSX → CSV-like text via SheetJS ──
   function extractTextFromXLSX(arrayBuffer, password = '') {
     const opts = { type: 'array', cellDates: true };
     if (password) opts.password = password;
@@ -2221,8 +2553,6 @@
     ).join('\n');
   }
 
-  // ── PDF → raw item list via PDF.js ──
-  // Groups text items into visual rows (same Y band) then sorts each row L-R.
   async function extractRawPDFItems(arrayBuffer, password = '') {
     if (typeof pdfjsLib === 'undefined') throw new Error('PDF.js not loaded');
     pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -2242,7 +2572,6 @@
         if (t) pageItems.push({ page: p, x: Math.round(item.transform[4]), y: Math.round(item.transform[5]), text: t });
       }
 
-      // Group items into visual rows with Y-tolerance
       const ROW_TOL = 5;
       pageItems.sort((a, b) => b.y - a.y);
       const rows = [];
@@ -2263,21 +2592,16 @@
       }
     }
 
-    return allRows; // array of rows, each row is array of {page,x,y,text}
+    return allRows;
   }
 
   // ── SBI PDF Parser ──
   function parseSBITokenStream(rows) {
-    // SBI Net Banking PDFs: transaction dates use DD/MM/YYYY (slashes)
-    // The "Statement From" header line uses dashes (12-08-2025) — so it WON'T match here
     const DATE_RE   = /^\d{2}\/\d{2}\/\d{4}$/;
-    // MUST have decimals — real SBI amounts are always like 512.00 or 1,23,456.78
-    // Branch codes (08069), ATM ref (8831), account numbers — never have decimals → safely excluded
     const AMOUNT_RE = /^[\d,]{1,12}\.\d{2}(CR|DR)?$/i;
     const SKIP_DESC = /^(BROUGHT\s*FORWARD|Page\s*no\.?|Post\s*Date|Value\s*Date|Description|Cheque|No[.\s]?\/?\s*Reference|Debit|Credit|Balance|Sl\.?\s*No|STATE\s*BANK|STATEMENT\s*OF|to|--|-)$/i;
     const STOP_RE   = /statement\s*summary|total\s*debit|total\s*credit/i;
 
-    // ── Step 1: extract account info from cover page tokens ──
     const allText = rows.flat().map(i => i.text);
     const infoMap = {};
     const INFO_KEYS = [
@@ -2309,7 +2633,6 @@
       }
     }
 
-    // Show account info card
     const grid = document.getElementById('account-info-grid');
     const card = document.getElementById('account-info-card');
     if (grid && card) {
@@ -2331,9 +2654,6 @@
       }
     }
 
-    // ── Step 2: flatten ALL tokens (no anchor needed) ──
-    // Cover page dates use slashes (01/08/2025) so DATE_RE won't match them.
-    // Only transaction-table dates use DD/MM/YYYY — parser naturally skips cover page.
     const rawTokens = [];
     for (const row of rows) {
       const rowText = row.map(i => i.text).join(' ');
@@ -2344,21 +2664,16 @@
       }
     }
 
-    // ── Heal comma-split numbers ──
-    // PDF.js sometimes splits "1,23,456.78" into ["1,", "23,456.78"] or ["1,23,", "456.78"]
-    // Merge any token ending with a comma into the next token if next starts with digits
     const tokens = [];
     for (let ti = 0; ti < rawTokens.length; ti++) {
       const t = rawTokens[ti];
       if (/^\d[\d,]*,$/.test(t) && ti + 1 < rawTokens.length && /^\d/.test(rawTokens[ti + 1])) {
-        // Merge: "1," + "23,456.78" → "1,23,456.78"
         rawTokens[ti + 1] = t + rawTokens[ti + 1];
       } else {
         tokens.push(t);
       }
     }
 
-    // ── Step 3: date-anchored transaction parsing ──
     const parsedTxns = [];
     let i = 0;
 
@@ -2366,62 +2681,40 @@
       if (!DATE_RE.test(tokens[i])) { i++; continue; }
 
       const postDate = tokens[i++];
-      // Skip Value Date (same format, immediately follows Post Date)
       if (i < tokens.length && DATE_RE.test(tokens[i])) i++;
 
-      // Collect all tokens until the next Post Date
       const chunk = [];
       while (i < tokens.length && !DATE_RE.test(tokens[i])) {
         chunk.push(tokens[i++]);
       }
 
-      // Split chunk into amounts vs description tokens
-      const amounts    = [];
-      const descTokens = [];
-      for (const t of chunk) {
-        if (AMOUNT_RE.test(t))       amounts.push(parseAmount(t));
-        else if (!SKIP_DESC.test(t)) descTokens.push(t);
-      }
+      const tagged2=[],plain2=[],dToks=[];
+      for(const t of chunk){if(AMOUNT_RE.test(t)){const g=/CR$/i.test(t)?'CR':/DR$/i.test(t)?'DR':null;(g?tagged2:plain2).push({val:parseAmount(t),tag:g});}else if(!SKIP_DESC.test(t))dToks.push(t);}
+      let amount=0,sfx=null;
+      if(tagged2.length){amount=tagged2[0].val;sfx=tagged2[0].tag;}
+      else if(plain2.length>=2)amount=plain2[plain2.length-2].val;
+      else if(plain2.length===1)amount=plain2[0].val;
+      else continue;
+      if(!amount||amount<=0)continue;
+      const desc=dToks.join(' ').replace(/\s+/g,' ').trim();if(!desc)continue;
+      const date=parseIndianDate(postDate);if(!date)continue;
+      let type;
+      if(sfx==='CR')type='income';
+      else if(sfx==='DR')type='expense';
+      else{const sC=/upi[\s\/](?:drc|cr(?!d)|ref|reversal)/i.test(desc)||/neft[^a-z]{0,10}cr|imps[^a-z]{0,10}cr/i.test(desc)||/interest\s*credit|\bint[\s\/]?cr\b/i.test(desc)||/csh[\s\/]?dep|cash[\s\/]?dep/i.test(desc);const sD=/upi[\s\/](?:drd|dr(?![cd]))/i.test(desc)||/neft[^a-z]{0,10}dr|imps[^a-z]{0,10}dr/i.test(desc)||/atm[\s\.]?wdl|atm\s*cash/i.test(desc)||/wdl[\s\/]?tfr|pos[\s\/]/i.test(desc);type=sC?'income':sD?'expense':(autoCategory(desc)?.type||'expense');}
+      const autoCat=autoCategory(desc),cat=autoCat?.cat||'other';
+      parsedTxns.push({date,desc,type,cat,amount});
 
-      // Amount extraction:
-      // Normal case: [tx_amount, balance] → use second-to-last
-      // Edge case: only 1 amount parsed (balance cell didn't render as a token, or amount had no decimal)
-      //   → if we have a valid description, the one amount IS the transaction value, not just balance
-      //   → "balance-only" rows (BROUGHT FORWARD etc.) are already caught by `if (!desc) continue` above
-      let amount = 0;
-      if (amounts.length >= 2)     amount = amounts[amounts.length - 2];
-      else if (amounts.length === 1) amount = amounts[0];   // valid desc = real transaction, not balance-only
-      else continue;  // no amounts at all — skip
-
-      if (!amount || amount <= 0) continue;
-
-      const desc = descTokens.join(' ').replace(/\s+/g, ' ').trim();
-      if (!desc) continue;
-
-      const date = parseIndianDate(postDate);
-      if (!date) continue;
-
-      const strongCredit = /upi[\s\/](?:drc|cr(?!d)|ref|reversal)/i.test(desc)
-                        || /neft[^a-z]{0,10}cr|imps[^a-z]{0,10}cr/i.test(desc)
-                        || /interest\s*credit|\bint[\s\/]?cr\b/i.test(desc);
-      const strongDebit  = /upi[\s\/](?:drd|dr(?![cd]))/i.test(desc)
-                        || /neft[^a-z]{0,10}dr|imps[^a-z]{0,10}dr/i.test(desc)
-                        || /atm[\s\.]?wdl|atm\s*cash/i.test(desc);
-      const weakCredit   = /csh[\s\/]?dep|cash[\s\/]?dep/i.test(desc);
-      const weakDebit    = /wdl[\s\/]?tfr|pos[\s\/]/i.test(desc);
-      const isCredit = strongCredit || (!strongDebit && weakCredit && !weakDebit);
-      const isDebit  = !isCredit && (strongDebit || weakDebit);
-      const autoCat = autoCategory(desc);
-      const type = isDebit ? 'expense' : isCredit ? 'income' : (autoCat?.type || 'expense');
-      const cat  = autoCat?.cat || 'other';
-
-      parsedTxns.push({ date, desc, type, cat, amount });
+      // FIX 1: ATM cash mirror entry pushed to parsedTxns (local return array),
+      // NOT parsedImportRows (global). Previously this entry was lost because
+      // parsedImportRows gets overwritten by the return value of this function.
+      if(/atm[\s\.]?wdl|atm\s*cash/i.test(desc))
+        parsedTxns.push({date,desc:'💵 Cash (from ATM)',type:'income',cat:'cash',amount});
     }
 
     return parsedTxns;
   }
 
-  // ── Toggle password eye ──
   function togglePasswordVisibility() {
     const inp = document.getElementById('file-password');
     const btn = document.getElementById('pwd-eye');
@@ -2431,14 +2724,13 @@
 
   // ── PARSE STATEMENT ──
   async function parseCSV() {
-    parsedImportRows = [];   // FIX 7: always reset before a new parse attempt
+    parsedImportRows = [];
     const password = document.getElementById('file-password').value;
     const fc     = document.getElementById('file-chosen');
     const status = document.getElementById('file-parsing-status');
     const ext    = currentFile ? currentFile.name.split('.').pop().toLowerCase() : '';
     fc.style.color = 'var(--green)';
 
-    // ── PDF: use row-grouped token stream parser ──
     if (ext === 'pdf' && currentFileBuffer) {
       try {
         status.style.display = 'block';
@@ -2446,7 +2738,6 @@
         const rows = await extractRawPDFItems(currentFileBuffer, password);
         status.style.display = 'none';
 
-        // DEBUG: show rows to find header
         console.log('=== ROWS DEBUG ===');
         rows.slice(0, 80).forEach((row, i) => {
           const txt = row.map(r => r.text).join(' | ');
@@ -2469,7 +2760,6 @@
       return;
     }
 
-    // ── XLSX ──
     if ((ext === 'xlsx' || ext === 'xls') && currentFileBuffer) {
       try {
         rawFileText = extractTextFromXLSX(currentFileBuffer, password);
@@ -2488,7 +2778,24 @@
 
     try {
       const rows         = parseCSVText(rawFileText);
+
+      // FIX 5: Detect and surface header-not-found as an explicit error
+      // instead of silently using row 0 as the header.
       const headerRowIdx = findHeaderRow(rows);
+      if (headerRowIdx === -1) {
+        showImportError(
+          'Could not find the transaction header row in this file.\n\n' +
+          'Possible reasons:\n' +
+          '• The file format is not a standard bank statement export\n' +
+          '• The column headers use unexpected names\n' +
+          '• Try selecting your bank manually on Step 1\n\n' +
+          'First few lines detected:\n' +
+          rows.slice(0, 5).map((r, i) => `[${i}] ${r.join(' | ')}`).join('\n')
+        );
+        goToStep(3);
+        return;
+      }
+
       const headers      = rows[headerRowIdx].map(h => h.replace(/"/g,'').trim());
 
       let schema;
@@ -2549,7 +2856,6 @@
     }
   }
 
-  // ── Shared preview renderer ──
   function showImportPreview(bankName, rows, skipped = 0) {
     const badge = document.getElementById('detected-bank-badge');
     badge.style.display = 'inline-flex';
@@ -2575,7 +2881,18 @@
     if (rows.length === 0) {
       const errEl = document.getElementById('import-error');
       if (errEl.style.display === 'none' || !errEl.textContent) {
-        showImportError('No transactions found in this PDF.\n\nPossible reasons:\n• The PDF uses a non-standard date format (check if dates show as DD/MM/YYYY with slashes instead of DD-MM-YYYY)\n• The file is a passbook scan (image-based PDF) — try the Excel format instead\n• The statement period has no transactions\n\nTip: Open the PDF and check the date format in the transaction table. SBI Net Banking statements use DD-MM-YYYY with dashes.');
+        // FIX 6: Corrected error message — parser expects DD/MM/YYYY with SLASHES
+        // (DATE_RE = /^\d{2}\/\d{2}\/\d{4}$/). The old message incorrectly implied
+        // slashes were the problem; in fact dashes are what the parser cannot handle.
+        showImportError(
+          'No transactions found in this PDF.\n\n' +
+          'Possible reasons:\n' +
+          '• The PDF uses dashes in dates (DD-MM-YYYY) — the parser requires slashes (DD/MM/YYYY)\n' +
+          '• The file is a passbook scan (image-based PDF) — try the Excel format instead\n' +
+          '• The statement period has no transactions\n\n' +
+          'Tip: Open the PDF and check the date format in the transaction table.\n' +
+          'SBI Net Banking statements should use DD/MM/YYYY with forward slashes.'
+        );
       }
     } else {
       document.getElementById('import-error').style.display = 'none';
@@ -2596,6 +2913,8 @@
   }
 
   // ── CONFIRM IMPORT ──
+  // FIX 4: Deduplication key now uses .toFixed(2) on both sides to prevent
+  // floating-point precision mismatches (e.g. 100.10000000001 vs "100.10").
   function confirmImport() {
     if (!parsedImportRows.length) return toast('⚠️ No transactions to import');
     const newTx = parsedImportRows.map(r => ({
@@ -2606,21 +2925,368 @@
       cat: r.cat,
       date: r.date,
     }));
-    // Merge, deduplicate by date+desc+amount
-    const existing = new Set(transactions.map(t => `${t.date}|${t.desc}|${t.amount}`));
-    const fresh = newTx.filter(t => !existing.has(`${t.date}|${t.desc}|${t.amount}`));
+    const existing = new Set(
+      transactions.map(t => `${t.date}|${t.desc}|${t.amount.toFixed(2)}`)
+    );
+    const fresh = newTx.filter(t =>
+      !existing.has(`${t.date}|${t.desc}|${t.amount.toFixed(2)}`)
+    );
     transactions = [...fresh, ...transactions];
     save();
     closeImportModal();
     toast(`🎉 Imported ${fresh.length} transactions! (${newTx.length - fresh.length} duplicates skipped)`);
   }
 
-  // ── START ──
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', renderAll);
-  } else {
+  // ── DATE RANGE ──
+  function setPreset(p){
+    const today=new Date(), fi=d=>d.toISOString().slice(0,10);
+    let from='', to='';
+    if(p==='30d'){const d=new Date(today);d.setDate(d.getDate()-30);from=fi(d);to=fi(today);}
+    else if(p==='3m'){const d=new Date(today);d.setMonth(d.getMonth()-3);from=fi(d);to=fi(today);}
+    else if(p==='6m'){const d=new Date(today);d.setMonth(d.getMonth()-6);from=fi(d);to=fi(today);}
+    else if(p==='1y'){from=fi(new Date(today.getFullYear(),0,1));to=fi(today);}
+    document.getElementById('date-from').value=from;
+    document.getElementById('date-to').value=to;
+    ['30d','3m','6m','1y','all'].forEach(x=>{
+      const b=document.getElementById('preset-'+x);
+      if(b){b.classList.toggle('active',x===p);b.classList.toggle('preset-btn',true);}
+    });
+    updateDateSummary(from,to);
     renderAll();
   }
+  function onDateChange(){
+    ['30d','3m','6m','1y','all'].forEach(p=>{const b=document.getElementById('preset-'+p);if(b)b.classList.remove('active');});
+    const from=document.getElementById('date-from').value, to=document.getElementById('date-to').value;
+    updateDateSummary(from,to);
+    renderAll();
+  }
+  function updateDateSummary(from,to){
+    const el=document.getElementById('date-range-summary');
+    const clr=document.getElementById('date-clear-btn');
+    if(!from&&!to){
+      el.innerHTML='Showing <strong>all transactions</strong>';
+      if(clr)clr.style.display='none';
+      return;
+    }
+    const fd=s=>s?new Date(s+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):'…';
+    el.innerHTML=`<strong>${fd(from)}</strong> → <strong>${fd(to)}</strong>`;
+    if(clr)clr.style.display='';
+  }
+  function getDateRange(){return{from:document.getElementById('date-from')?.value||'',to:document.getElementById('date-to')?.value||''};}
+
+  // ── AUTH ──
+  function switchTab(t){document.getElementById('form-login').style.display=t==='login'?'':'none';document.getElementById('form-signup').style.display=t==='signup'?'':'none';document.getElementById('tab-login').classList.toggle('active',t==='login');document.getElementById('tab-signup').classList.toggle('active',t==='signup');clearAuthMsg();}
+  function setAuthBusy(on,msg){document.getElementById('auth-loading').style.display=on?'flex':'none';if(msg)document.getElementById('auth-loading-text').textContent=msg;['btn-login','btn-signup','btn-google'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=on;});}
+  function showAuthError(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.classList.add('visible');document.getElementById('auth-success').classList.remove('visible');}
+  function showAuthSuccess(msg){const e=document.getElementById('auth-success');e.textContent=msg;e.classList.add('visible');document.getElementById('auth-error').classList.remove('visible');}
+  function clearAuthMsg(){document.getElementById('auth-error').classList.remove('visible');document.getElementById('auth-success').classList.remove('visible');}
+  function authLogin(){const email=document.getElementById('login-email').value.trim(),pass=document.getElementById('login-pass').value;if(!email||!pass)return showAuthError('Please enter your email and password.');clearAuthMsg();setAuthBusy(true,'Signing in…');fbAuth.signInWithEmailAndPassword(email,pass).catch(e=>{setAuthBusy(false);showAuthError(friendlyErr(e.code));});}
+  function authSignup(){const email=document.getElementById('signup-email').value.trim(),pass=document.getElementById('signup-pass').value,pass2=document.getElementById('signup-pass2').value;if(!email||!pass)return showAuthError('Please fill in all fields.');if(pass!==pass2)return showAuthError('Passwords do not match.');if(pass.length<6)return showAuthError('Password must be at least 6 characters.');clearAuthMsg();setAuthBusy(true,'Creating account…');fbAuth.createUserWithEmailAndPassword(email,pass).catch(e=>{setAuthBusy(false);showAuthError(friendlyErr(e.code));});}
+  function authGoogle(){clearAuthMsg();setAuthBusy(true,'Opening Google sign-in…');const provider=new firebase.auth.GoogleAuthProvider();fbAuth.signInWithPopup(provider).catch(e=>{setAuthBusy(false);if(e.code!=='auth/popup-closed-by-user')showAuthError(friendlyErr(e.code));});}
+  function authResetPassword(){const email=document.getElementById('login-email').value.trim();if(!email)return showAuthError('Enter your email address above first.');fbAuth.sendPasswordResetEmail(email).then(()=>showAuthSuccess('✅ Reset email sent! Check your inbox.')).catch(e=>showAuthError(friendlyErr(e.code)));}
+  function authSignOut(){closeUserMenu();fbAuth.signOut();}
+  function toggleUserMenu(){document.getElementById('user-menu').classList.toggle('open');}
+  function closeUserMenu(){document.getElementById('user-menu').classList.remove('open');}
+  document.addEventListener('click',e=>{if(!e.target.closest('.user-pill'))closeUserMenu();});
+  function friendlyErr(code){
+    const map = {
+      'auth/user-not-found':          'No account found with this email.',
+      'auth/wrong-password':          'Incorrect password.',
+      'auth/invalid-credential':      'Incorrect email or password.',
+      'auth/email-already-in-use':    'An account with this email already exists.',
+      'auth/weak-password':           'Password must be at least 6 characters.',
+      'auth/invalid-email':           'Please enter a valid email address.',
+      'auth/too-many-requests':        'Too many attempts. Please wait a moment.',
+      'auth/network-request-failed':  'Network error. Check your connection.',
+      'auth/popup-blocked':           'Popup blocked — please allow popups for this site.',
+      'auth/popup-closed-by-user':    'Sign-in popup was closed. Please try again.',
+      'auth/cancelled-popup-request': 'Sign-in was cancelled. Please try again.',
+      'auth/unauthorized-domain':     'This domain is not authorised in Firebase Console. Add it under Authentication → Settings → Authorized Domains.',
+      'auth/operation-not-allowed':   'Google Sign-In is not enabled. Enable it in Firebase Console → Authentication → Sign-in Providers.',
+      'auth/internal-error':          'Firebase internal error. Check the browser console for details.',
+      'auth/requires-recent-login':   'Please sign out and sign back in before making this change.',
+    };
+    return map[code] || `Something went wrong (${code || 'unknown'}). Check the browser console for details.`;
+  }
+
+  // ════════════════════════════════════════
+  // ── PROFILE MODAL ──
+  // ════════════════════════════════════════
+
+  let reauthAction = null; // 'delete' | 'password'
+  let pendingNewPassword = null;
+
+  function openProfile() {
+    const user = fbAuth.currentUser;
+    if (!user) return;
+
+    // Header
+    const name = user.displayName || '';
+    document.getElementById('profile-display-title').textContent = name || 'No display name';
+    document.getElementById('profile-email-title').textContent   = user.email || '';
+    document.getElementById('profile-name').value  = name;
+    document.getElementById('profile-email').value = user.email || '';
+    document.getElementById('profile-cur-display').value = `${activeCurrency.flag} ${activeCurrency.code} — ${activeCurrency.name}`;
+    document.getElementById('profile-data-size').value   = `${transactions.length} transactions`;
+
+    // Avatar
+    refreshProfileAvatar();
+
+    // Stats
+    const totalIncome  = transactions.filter(t => t.type === 'income' && t.cat !== 'cash').reduce((s,t) => s + t.amount, 0);
+    const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+    document.getElementById('pstat-txn').textContent     = transactions.length;
+    document.getElementById('pstat-income').textContent  = fmt(totalIncome);
+    document.getElementById('pstat-expense').textContent = fmt(totalExpense);
+    // Member since
+    const created = user.metadata?.creationTime;
+    document.getElementById('pstat-since').textContent = created
+      ? new Date(created).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
+      : '—';
+
+    // Google provider — hide password change
+    const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+    document.getElementById('google-provider-note').style.display  = isGoogle ? 'block' : 'none';
+    document.getElementById('password-change-form').style.display  = isGoogle ? 'none'  : 'block';
+
+    // Clear messages
+    clearProfileMsg('profile-info-msg');
+    clearProfileMsg('profile-pass-msg');
+    document.getElementById('profile-cur-pass').value  = '';
+    document.getElementById('profile-new-pass').value  = '';
+    document.getElementById('profile-new-pass2').value = '';
+
+    document.getElementById('profile-overlay').classList.add('active');
+  }
+
+  function closeProfile() {
+    document.getElementById('profile-overlay').classList.remove('active');
+  }
+
+  function handleProfileOverlayClick(e) {
+    if (e.target === document.getElementById('profile-overlay')) closeProfile();
+  }
+
+  function refreshProfileAvatar() {
+    const user = fbAuth.currentUser;
+    if (!user) return;
+    const bigWrap   = document.getElementById('profile-avatar-big');
+    const bigImg    = document.getElementById('profile-avatar-img');
+    const bigInit   = document.getElementById('profile-avatar-initials');
+    const initials  = (user.displayName || user.email || '?').slice(0, 2).toUpperCase();
+
+    if (user.photoURL) {
+      bigImg.src = user.photoURL;
+      bigImg.style.display = '';
+      bigInit.style.display = 'none';
+    } else {
+      bigImg.style.display = 'none';
+      bigInit.style.display = '';
+      bigInit.textContent = initials;
+    }
+    // also refresh header pill avatar
+    const pillAvatar = document.getElementById('user-avatar');
+    if (user.photoURL) {
+      pillAvatar.innerHTML = `<img src="${user.photoURL}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      pillAvatar.textContent = initials;
+    }
+  }
+
+  function handleAvatarChange(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) return toast('⚠️ Image must be under 2 MB');
+    const reader = new FileReader();
+    reader.onload = ev => {
+      // Firebase Storage not included — store as data URL in Realtime DB profile node
+      const dataUrl = ev.target.result;
+      const user = fbAuth.currentUser;
+      if (!user) return;
+      user.updateProfile({ photoURL: dataUrl })
+        .then(() => {
+          if (userDbRef) userDbRef.update({ photoURL: dataUrl });
+          refreshProfileAvatar();
+          toast('✅ Profile photo updated!');
+        })
+        .catch(err => toast('❌ Could not update photo: ' + err.message));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function saveDisplayName() {
+    const val = document.getElementById('profile-name').value.trim();
+    if (!val) return showProfileMsg('profile-info-msg', 'error', 'Display name cannot be empty.');
+    const btn = document.getElementById('btn-save-name');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    fbAuth.currentUser.updateProfile({ displayName: val })
+      .then(() => {
+        if (userDbRef) userDbRef.update({ displayName: val });
+        document.getElementById('profile-display-title').textContent = val;
+        document.getElementById('user-email-short').textContent = val;
+        refreshProfileAvatar();
+        showProfileMsg('profile-info-msg', 'success', '✅ Display name updated!');
+        btn.disabled = false; btn.textContent = 'Save Name';
+      })
+      .catch(err => {
+        showProfileMsg('profile-info-msg', 'error', err.message);
+        btn.disabled = false; btn.textContent = 'Save Name';
+      });
+  }
+
+  function changePassword() {
+    const cur  = document.getElementById('profile-cur-pass').value;
+    const np   = document.getElementById('profile-new-pass').value;
+    const np2  = document.getElementById('profile-new-pass2').value;
+    if (!cur)        return showProfileMsg('profile-pass-msg', 'error', 'Enter your current password.');
+    if (!np)         return showProfileMsg('profile-pass-msg', 'error', 'Enter a new password.');
+    if (np.length < 6) return showProfileMsg('profile-pass-msg', 'error', 'New password must be at least 6 characters.');
+    if (np !== np2)  return showProfileMsg('profile-pass-msg', 'error', 'New passwords do not match.');
+
+    pendingNewPassword = np;
+    openReauth('password', cur);
+  }
+
+  // ── REAUTH ──
+  function openReauth(action, prefillPass = '') {
+    reauthAction = action;
+    const titleEl = document.getElementById('reauth-title');
+    const subEl   = document.getElementById('reauth-sub');
+    const btnEl   = document.getElementById('btn-reauth-submit');
+    if (action === 'delete') {
+      titleEl.textContent = '⚠️ Delete Account';
+      subEl.textContent   = 'This is permanent. Enter your password to confirm deletion of your account and all data.';
+      btnEl.textContent   = '🗑 Yes, Delete Account';
+    } else {
+      titleEl.textContent = '🔒 Confirm Password Change';
+      subEl.textContent   = 'Re-enter your current password to authorise this change.';
+      btnEl.textContent   = '✅ Change Password';
+    }
+    document.getElementById('reauth-pass').value = prefillPass || '';
+    clearReauthMsg();
+    document.getElementById('reauth-overlay').classList.add('active');
+    setTimeout(() => document.getElementById('reauth-pass').focus(), 80);
+  }
+
+  function closeReauth() {
+    document.getElementById('reauth-overlay').classList.remove('active');
+    reauthAction = null;
+    pendingNewPassword = null;
+  }
+
+  function handleReauthOverlayClick(e) {
+    if (e.target === document.getElementById('reauth-overlay')) closeReauth();
+  }
+
+  async function submitReauth() {
+    const pass = document.getElementById('reauth-pass').value;
+    if (!pass) return showReauthMsg('Enter your password.');
+    const btn = document.getElementById('btn-reauth-submit');
+    btn.disabled = true; btn.textContent = 'Verifying…';
+
+    try {
+      const user = fbAuth.currentUser;
+      const cred = firebase.auth.EmailAuthProvider.credential(user.email, pass);
+      await user.reauthenticateWithCredential(cred);
+
+      if (reauthAction === 'delete') {
+        await executeDeleteAccount();
+      } else if (reauthAction === 'password') {
+        await executeChangePassword();
+      }
+    } catch (err) {
+      const msg = String(err.code || err.message || '').toLowerCase();
+      const friendly = (msg.includes('wrong-password') || msg.includes('invalid-credential'))
+        ? 'Incorrect password. Please try again.'
+        : (msg.includes('too-many-requests') ? 'Too many attempts. Please wait.' : 'Authentication failed: ' + err.message);
+      showReauthMsg(friendly);
+      btn.disabled = false;
+      btn.textContent = reauthAction === 'delete' ? '🗑 Yes, Delete Account' : '✅ Change Password';
+    }
+  }
+
+  async function executeDeleteAccount() {
+    const user = fbAuth.currentUser;
+    try {
+      // 1. Wipe Realtime DB data
+      if (userDbRef) await userDbRef.remove();
+      // 2. Delete Firebase Auth account
+      await user.delete();
+      closeReauth();
+      closeProfile();
+      toast('👋 Account deleted. Goodbye!');
+      // onAuthStateChanged will handle UI reset
+    } catch (err) {
+      showReauthMsg('Could not delete account: ' + err.message);
+      document.getElementById('btn-reauth-submit').disabled = false;
+      document.getElementById('btn-reauth-submit').textContent = '🗑 Yes, Delete Account';
+    }
+  }
+
+  async function executeChangePassword() {
+    const user = fbAuth.currentUser;
+    try {
+      await user.updatePassword(pendingNewPassword);
+      closeReauth();
+      pendingNewPassword = null;
+      document.getElementById('profile-cur-pass').value  = '';
+      document.getElementById('profile-new-pass').value  = '';
+      document.getElementById('profile-new-pass2').value = '';
+      showProfileMsg('profile-pass-msg', 'success', '✅ Password updated successfully!');
+      toast('🔒 Password changed!');
+    } catch (err) {
+      closeReauth();
+      showProfileMsg('profile-pass-msg', 'error', 'Could not update password: ' + err.message);
+    }
+  }
+
+  // ── Profile message helpers ──
+  function showProfileMsg(id, type, msg) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = `profile-msg ${type} visible`;
+    setTimeout(() => el.classList.remove('visible'), 4000);
+  }
+  function clearProfileMsg(id) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = ''; el.className = 'profile-msg'; }
+  }
+  function showReauthMsg(msg) {
+    const el = document.getElementById('reauth-msg');
+    el.textContent = msg;
+    el.classList.add('visible');
+  }
+  function clearReauthMsg() {
+    const el = document.getElementById('reauth-msg');
+    el.textContent = ''; el.classList.remove('visible');
+  }
+
+  fbAuth.onAuthStateChanged(user=>{
+    if(user){
+      currentUser=user;userDbRef=fbDb.ref('users/'+user.uid);
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('main-app').style.display='';
+      const pill=document.getElementById('user-pill'),avatar=document.getElementById('user-avatar');
+      if(user.photoURL){avatar.innerHTML=`<img src="${user.photoURL}" alt="">`;}else{avatar.textContent=(user.displayName||user.email||'?').slice(0,2).toUpperCase();}
+      document.getElementById('user-email-short').textContent=user.displayName||user.email||'';
+      document.getElementById('user-menu-email').textContent=user.email||'';
+      pill.style.display='';
+      if(!document.getElementById('sync-dot')){const dot=document.createElement('span');dot.id='sync-dot';dot.className='sync-dot';dot.title='All changes saved ✓';pill.insertBefore(dot,document.getElementById('user-email-short'));}
+      userDbRef.once('value').then(snap=>{
+        const data=snap.val()||{};
+        transactions=Array.isArray(data.transactions)?data.transactions:[];
+        if(data.currency){const c=CURRENCIES.find(x=>x.code===data.currency);if(c){activeCurrency=c;document.getElementById('cur-flag').textContent=c.flag;document.getElementById('cur-code').textContent=c.code;document.getElementById('cur-name').textContent=c.name;document.getElementById('amount-currency-label').textContent=c.symbol;}}
+        renderAll();setAuthBusy(false);
+      });
+    }else{
+      currentUser=null;userDbRef=null;transactions=[];
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('main-app').style.display='none';
+      document.getElementById('user-pill').style.display='none';
+      setAuthBusy(false);
+    }
+  });
 </script>
+</div><!-- /main-app -->
 </body>
 </html>
