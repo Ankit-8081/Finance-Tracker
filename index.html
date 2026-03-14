@@ -823,40 +823,294 @@
       header { padding: 16px 20px; }
     }
 
-    /* ══════ AUTH ══════ */
-    #auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:24px}
+    /* ══════ AUTH — SPLIT SCREEN ══════ */
+    #auth-screen{position:fixed;inset:0;z-index:9999;display:flex;background:var(--bg);overflow:hidden}
     #auth-screen.hidden{display:none}
-    .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:44px 48px;width:100%;max-width:440px;position:relative;overflow:hidden}
-    .auth-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#4f9eff,#a78bfa,#f472b6)}
-    .auth-logo{font-size:2.4rem;text-align:center;margin-bottom:6px}
-    .auth-title{font-family:'Outfit',sans-serif;font-size:1.6rem;font-weight:800;text-align:center;letter-spacing:-.5px;margin-bottom:4px}
-    .auth-sub{font-size:.83rem;color:var(--muted);text-align:center;margin-bottom:28px}
-    .auth-tabs{display:flex;background:var(--surface2);border-radius:10px;padding:4px;margin-bottom:24px;gap:4px}
-    .auth-tab{flex:1;padding:9px;border:none;border-radius:7px;background:transparent;color:var(--muted);font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;transition:all .18s}
-    .auth-tab.active{background:var(--surface);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.3)}
-    .auth-field{margin-bottom:14px}
-    .auth-field label{display:block;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px}
-    .auth-field input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.95rem;padding:11px 14px;outline:none;transition:border-color .15s,box-shadow .15s}
-    .auth-field input:focus{border-color:#4f9eff;box-shadow:0 0 0 3px rgba(79,158,255,.12)}
-    .auth-field input::placeholder{color:var(--muted);opacity:.55}
-    .auth-btn{width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#4f9eff,#a78bfa);color:#fff;font-family:'Outfit',sans-serif;font-size:.97rem;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .18s,transform .18s}
-    .auth-btn:hover{opacity:.9;transform:translateY(-1px)}
-    .auth-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-    .auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:.78rem}
-    .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
-    .auth-google-btn{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:border-color .15s,background .15s}
-    .auth-google-btn:hover{border-color:rgba(255,255,255,.3);background:var(--surface)}
-    .auth-google-btn:disabled{opacity:.45;cursor:not-allowed}
-    .auth-error{background:rgba(255,94,126,.12);border:1px solid rgba(255,94,126,.3);border-radius:8px;color:#ff5e7e;font-size:.82rem;padding:10px 14px;margin-bottom:14px;display:none}
-    .auth-error.visible{display:block}
-    .auth-success{background:rgba(0,229,160,.1);border:1px solid rgba(0,229,160,.3);border-radius:8px;color:#00e5a0;font-size:.82rem;padding:10px 14px;margin-bottom:14px;display:none}
-    .auth-success.visible{display:block}
-    .auth-switch{text-align:center;color:var(--muted);font-size:.82rem;margin-top:16px}
-    .auth-switch span{color:#4f9eff;cursor:pointer;font-weight:700}
-    .auth-switch span:hover{text-decoration:underline}
-    .auth-loading{display:none;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:.85rem;padding:8px 0}
-    .auth-spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:#4f9eff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
-    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* ── left panel (branding) ── */
+    .auth-left{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:flex-start;
+      padding:40px 48px 40px 52px;
+      position:relative;
+      overflow:hidden;
+      background:linear-gradient(145deg,#060d1f 0%,#0d1a3a 45%,#130d2e 100%);
+    }
+    /* orb 1 */
+    .auth-left::before{
+      content:'';position:absolute;
+      width:560px;height:560px;border-radius:50%;
+      background:radial-gradient(circle,rgba(79,158,255,.16) 0%,transparent 70%);
+      top:-160px;left:-140px;
+      animation:orbFloat 9s ease-in-out infinite;
+    }
+    /* orb 2 */
+    .auth-left::after{
+      content:'';position:absolute;
+      width:440px;height:440px;border-radius:50%;
+      background:radial-gradient(circle,rgba(167,139,250,.13) 0%,transparent 70%);
+      bottom:-100px;right:-80px;
+      animation:orbFloat 11s ease-in-out infinite reverse;
+    }
+    @keyframes orbFloat{
+      0%,100%{transform:translateY(0) scale(1);}
+      50%{transform:translateY(-28px) scale(1.04);}
+    }
+    /* orb 3 — pink, mid-right */
+    .auth-orb3{
+      position:absolute;width:300px;height:300px;border-radius:50%;
+      background:radial-gradient(circle,rgba(244,114,182,.1) 0%,transparent 70%);
+      top:40%;right:-60px;
+      animation:orbFloat 13s ease-in-out infinite;
+      pointer-events:none;
+    }
+    /* floating particles */
+    .auth-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+    .auth-particle{
+      position:absolute;border-radius:50%;
+      background:rgba(255,255,255,.35);
+      animation:particleDrift linear infinite;
+    }
+    @keyframes particleDrift{
+      0%  {transform:translateY(0) translateX(0);   opacity:0;}
+      10% {opacity:1;}
+      90% {opacity:.6;}
+      100%{transform:translateY(-100vh) translateX(30px); opacity:0;}
+    }
+
+    .auth-left-inner{position:relative;z-index:1;width:100%;}
+    .auth-brand{display:flex;align-items:center;gap:14px;margin-bottom:28px;}
+    .auth-brand-icon{
+      width:48px;height:48px;
+      background:linear-gradient(135deg,#4f9eff,#a78bfa);
+      border-radius:13px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.5rem;
+      box-shadow:0 8px 28px rgba(79,158,255,.35);
+    }
+    .auth-brand-name{
+      font-family:'Outfit',sans-serif;font-size:1.4rem;font-weight:800;
+      background:linear-gradient(90deg,#fff,#c4d8ff);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .auth-hero-title{
+      font-family:'Outfit',sans-serif;font-size:2.6rem;font-weight:800;
+      line-height:1.18;letter-spacing:-.8px;color:#fff;margin-bottom:10px;
+    }
+    .auth-hero-title span{
+      background:linear-gradient(90deg,#4f9eff,#a78bfa,#f472b6);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .auth-hero-sub{font-size:.88rem;color:rgba(255,255,255,.42);line-height:1.6;margin-bottom:26px;}
+
+    /* ── animated dashboard preview ── */
+    .auth-preview{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:16px;
+      padding:18px 20px;
+      margin-bottom:24px;
+      backdrop-filter:blur(12px);
+      animation:previewFadeIn .8s ease .3s both;
+    }
+    @keyframes previewFadeIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+
+    .auth-preview-header{
+      font-family:'Outfit',sans-serif;font-size:.72rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:.8px;
+      color:rgba(255,255,255,.35);margin-bottom:14px;
+      display:flex;align-items:center;gap:7px;
+    }
+    .auth-preview-dot{
+      width:6px;height:6px;border-radius:50%;background:var(--green);
+      animation:blink 2s ease-in-out infinite;
+    }
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.25;}}
+
+    /* mini stat cards row */
+    .auth-preview-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+    .auth-preview-stat{
+      background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);
+      border-radius:10px;padding:10px 12px;
+    }
+    .auth-preview-stat-val{
+      font-family:'Outfit',sans-serif;font-size:1rem;font-weight:800;
+      margin-bottom:2px;
+    }
+    .auth-preview-stat-lbl{font-size:.65rem;font-weight:600;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.4px;}
+
+    /* mini bar chart */
+    .auth-chart{display:flex;align-items:flex-end;gap:5px;height:52px;margin-bottom:14px;}
+    .auth-bar-group{display:flex;gap:2px;align-items:flex-end;flex:1;}
+    .auth-bar{
+      flex:1;border-radius:3px 3px 0 0;
+      transform-origin:bottom;
+      animation:barGrow .9s cubic-bezier(.34,1.3,.64,1) both;
+    }
+    .auth-bar.inc{background:rgba(0,229,160,.7);}
+    .auth-bar.exp{background:rgba(255,94,126,.65);}
+    @keyframes barGrow{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+
+    /* mini transaction rows */
+    .auth-txs{display:flex;flex-direction:column;gap:7px;}
+    .auth-tx{
+      display:flex;align-items:center;gap:10px;
+      background:rgba(255,255,255,.04);border-radius:8px;padding:8px 10px;
+      animation:txSlideIn .5s ease both;
+    }
+    @keyframes txSlideIn{from{opacity:0;transform:translateX(-12px);}to{opacity:1;transform:translateX(0);}}
+    .auth-tx-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;}
+    .auth-tx-desc{font-size:.75rem;font-weight:600;color:rgba(255,255,255,.7);flex:1;}
+    .auth-tx-amt{font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:800;}
+
+    /* feature pills — single row */
+    .auth-features{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+    .auth-feature{
+      display:flex;align-items:center;gap:10px;
+      background:rgba(255,255,255,.035);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:10px;padding:10px 12px;
+      backdrop-filter:blur(8px);
+      animation:previewFadeIn .6s ease both;
+    }
+    .auth-feature:nth-child(1){animation-delay:.1s;}
+    .auth-feature:nth-child(2){animation-delay:.2s;}
+    .auth-feature:nth-child(3){animation-delay:.3s;}
+    .auth-feature:nth-child(4){animation-delay:.4s;}
+    .auth-feature-icon{
+      width:30px;height:30px;border-radius:8px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:.85rem;flex-shrink:0;
+    }
+    .auth-feature-text{font-size:.76rem;color:rgba(255,255,255,.55);font-weight:500;line-height:1.35;}
+    .auth-feature-text strong{color:rgba(255,255,255,.82);font-weight:700;display:block;}
+
+    /* ── right panel (form) ── */
+    .auth-right{
+      width:400px;
+      flex-shrink:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:36px 40px;
+      background:#0d1220;
+      border-left:1px solid rgba(255,255,255,.06);
+      overflow-y:auto;
+    }
+    .auth-form-wrap{width:100%;max-width:360px;}
+
+    /* form header */
+    .auth-form-logo{font-size:2rem;text-align:center;margin-bottom:4px;}
+    .auth-form-title{
+      font-family:'Outfit',sans-serif;font-size:1.55rem;font-weight:800;
+      text-align:center;letter-spacing:-.4px;
+      background:linear-gradient(135deg,#e8edf5,#a0b4cc);
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+      margin-bottom:4px;
+    }
+    .auth-form-sub{font-size:.82rem;color:var(--muted);text-align:center;margin-bottom:28px;}
+
+    /* tabs */
+    .auth-tabs{
+      display:flex;background:rgba(255,255,255,.04);
+      border:1px solid var(--border);
+      border-radius:11px;padding:4px;margin-bottom:22px;gap:4px;
+    }
+    .auth-tab{
+      flex:1;padding:9px;border:none;border-radius:8px;
+      background:transparent;color:var(--muted);
+      font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;
+      transition:all .18s;
+    }
+    .auth-tab.active{
+      background:linear-gradient(135deg,rgba(79,158,255,.2),rgba(167,139,250,.2));
+      border:1px solid rgba(79,158,255,.3);
+      color:var(--text);
+    }
+
+    /* Google btn */
+    .auth-google-btn{
+      width:100%;padding:12px;
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:11px;
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:600;
+      cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      transition:all .18s;
+      position:relative;overflow:hidden;
+    }
+    .auth-google-btn::before{
+      content:'';position:absolute;inset:0;
+      background:linear-gradient(135deg,rgba(79,158,255,.08),rgba(167,139,250,.08));
+      opacity:0;transition:opacity .18s;
+    }
+    .auth-google-btn:hover{border-color:rgba(79,158,255,.4);}
+    .auth-google-btn:hover::before{opacity:1;}
+    .auth-google-btn:disabled{opacity:.45;cursor:not-allowed;}
+
+    .auth-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:.75rem;letter-spacing:.5px;text-transform:uppercase;}
+    .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    /* fields */
+    .auth-field{margin-bottom:14px;position:relative;}
+    .auth-field label{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--muted);margin-bottom:7px;}
+    .auth-field-icon{position:absolute;left:13px;top:50%;transform:translateY(calc(-50% + 12px));font-size:.95rem;pointer-events:none;}
+    .auth-field input{
+      width:100%;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:11px;
+      color:var(--text);
+      font-family:'Outfit',sans-serif;font-size:.95rem;
+      padding:12px 14px 12px 40px;
+      outline:none;
+      transition:border-color .15s,box-shadow .15s,background .15s;
+    }
+    .auth-field input:focus{
+      border-color:#4f9eff;
+      background:rgba(79,158,255,.06);
+      box-shadow:0 0 0 3px rgba(79,158,255,.12);
+    }
+    .auth-field input::placeholder{color:var(--muted);opacity:.5;}
+
+    /* sign-in button */
+    .auth-btn{
+      width:100%;padding:13px;border:none;border-radius:11px;
+      background:linear-gradient(135deg,#4f9eff 0%,#a78bfa 60%,#f472b6 100%);
+      color:#fff;
+      font-family:'Outfit',sans-serif;font-size:1rem;font-weight:800;
+      cursor:pointer;margin-top:6px;
+      transition:opacity .18s,transform .18s,box-shadow .18s;
+      box-shadow:0 4px 24px rgba(79,158,255,.3);
+      letter-spacing:.2px;
+    }
+    .auth-btn:hover{opacity:.92;transform:translateY(-2px);box-shadow:0 8px 32px rgba(79,158,255,.4);}
+    .auth-btn:active{transform:translateY(0);}
+    .auth-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none;}
+
+    .auth-error{background:rgba(255,94,126,.1);border:1px solid rgba(255,94,126,.3);border-radius:9px;color:#ff8fa3;font-size:.8rem;padding:10px 14px;margin-bottom:14px;display:none;line-height:1.5;}
+    .auth-error.visible{display:block;}
+    .auth-success{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.3);border-radius:9px;color:#00e5a0;font-size:.8rem;padding:10px 14px;margin-bottom:14px;display:none;}
+    .auth-success.visible{display:block;}
+    .auth-switch{text-align:center;color:var(--muted);font-size:.8rem;margin-top:16px;}
+    .auth-switch span{color:#7eb8ff;cursor:pointer;font-weight:700;}
+    .auth-switch span:hover{color:#4f9eff;text-decoration:underline;}
+
+    .auth-loading{display:none;align-items:center;justify-content:center;gap:10px;color:var(--muted);font-size:.85rem;padding:8px 0;}
+    .auth-spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:#4f9eff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* responsive: stack on mobile */
+    @media(max-width:780px){
+      #auth-screen{flex-direction:column;}
+      .auth-left{display:none;}
+      .auth-right{width:100%;border-left:none;padding:32px 24px;}
+    }
     .user-pill{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 14px 5px 6px;cursor:pointer;transition:border-color .15s;position:relative}
     .user-pill:hover{border-color:rgba(255,255,255,.25)}
     .user-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#4f9eff,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;color:#fff;flex-shrink:0;overflow:hidden}
@@ -912,9 +1166,10 @@
     .profile-modal::-webkit-scrollbar-thumb{background:rgba(79,158,255,.25);border-radius:4px}
 
     /* hero banner */
-    .profile-banner{height:110px;background:linear-gradient(135deg,#0f2a5a 0%,#1a0f4a 50%,#0f2a3a 100%);position:relative;border-radius:20px 20px 0 0;overflow:hidden}
-    .profile-banner::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
-    .profile-avatar-wrap{position:absolute;bottom:-36px;left:32px}
+    .profile-banner{height:130px;background:linear-gradient(135deg,#0f2a5a 0%,#1a0f4a 50%,#0f2a3a 100%);position:relative;border-radius:20px 20px 0 0;overflow:visible;}
+    .profile-banner-inner{height:130px;border-radius:20px 20px 0 0;overflow:hidden;position:relative;}
+    .profile-banner-inner::after{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+    .profile-avatar-wrap{position:absolute;bottom:-38px;left:32px;z-index:10;}
     .profile-avatar-big{width:76px;height:76px;border-radius:50%;background:linear-gradient(135deg,#4f9eff,#a78bfa);border:4px solid #13192a;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:800;color:#fff;overflow:hidden;cursor:pointer;position:relative;transition:filter .2s}
     .profile-avatar-big:hover{filter:brightness(.8)}
     .profile-avatar-big img{width:100%;height:100%;object-fit:cover;border-radius:50%}
@@ -922,7 +1177,7 @@
     .profile-avatar-big:hover .profile-avatar-edit{opacity:1}
     .profile-avatar-input{position:absolute;inset:0;opacity:0;cursor:pointer;border-radius:50%}
 
-    .profile-header-row{display:flex;align-items:flex-start;justify-content:space-between;padding:48px 28px 0}
+    .profile-header-row{display:flex;align-items:flex-start;justify-content:space-between;padding:52px 28px 0;}
     .profile-close-btn{background:none;border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
     .profile-close-btn:hover{background:rgba(255,94,126,.15);border-color:var(--red);color:var(--red)}
 
@@ -983,40 +1238,203 @@
     .reauth-msg.visible{display:block}
     .reauth-actions{display:flex;gap:10px;margin-top:4px}
 
+    /* ── big code marquee strip ── */
+    .auth-code-strip{
+      position:relative;
+      margin:20px 0;
+      overflow:hidden;
+      height:72px;
+      mask-image:linear-gradient(90deg,transparent 0%,black 12%,black 88%,transparent 100%);
+      -webkit-mask-image:linear-gradient(90deg,transparent 0%,black 12%,black 88%,transparent 100%);
+    }
+    .auth-code-track{
+      display:flex;
+      gap:32px;
+      white-space:nowrap;
+      animation:codeScroll 28s linear infinite;
+      will-change:transform;
+    }
+    .auth-code-track:hover{ animation-play-state:paused; }
+    @keyframes codeScroll{
+      0%  { transform:translateX(0); }
+      100%{ transform:translateX(-50%); }
+    }
+    .auth-code-word{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-family:'Outfit',sans-serif;
+      font-size:1.55rem;
+      font-weight:800;
+      letter-spacing:-.5px;
+      opacity:.18;
+      transition:opacity .3s;
+      user-select:none;
+      flex-shrink:0;
+    }
+    .auth-code-word:hover{ opacity:.55; }
+    .ck-blue  { color:#4f9eff; }
+    .ck-green { color:#00e5a0; }
+    .ck-purple{ color:#a78bfa; }
+    .ck-pink  { color:#f472b6; }
+    .ck-amber { color:#ffb830; }
+    .ck-cyan  { color:#22d3ee; }
+    .ck-red   { color:#ff5e7e; }
+
   </style>
 </head>
 <body>
 
 <div id="auth-screen">
-  <div class="auth-card">
-    <div class="auth-logo">💸</div>
-    <div class="auth-title">FinanceTrack</div>
-    <div class="auth-sub">Sign in to access your personal finance dashboard</div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login"  onclick="switchTab('login')">Sign In</button>
-      <button class="auth-tab"        id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+
+  <!-- LEFT: Branding panel -->
+  <div class="auth-left">
+    <!-- extra orb + particles -->
+    <div class="auth-orb3"></div>
+    <div class="auth-particles" id="auth-particles"></div>
+
+    <div class="auth-left-inner">
+      <div class="auth-brand">
+        <div class="auth-brand-icon">💸</div>
+        <div class="auth-brand-name">FinanceTrack</div>
+      </div>
+
+      <div class="auth-hero-title">
+        Your money,<br>
+        <span>fully in control.</span>
+      </div>
+      <div class="auth-hero-sub">
+        Track income &amp; expenses, import bank statements, and see where every rupee goes — beautifully.
+      </div>
+
+      <!-- Animated dashboard preview -->
+      <div class="auth-preview">
+        <div class="auth-preview-header">
+          <div class="auth-preview-dot"></div>
+          Live Dashboard Preview
+        </div>
+
+        <!-- Stat cards -->
+        <div class="auth-preview-stats">
+          <div class="auth-preview-stat">
+            <div class="auth-preview-stat-val" style="color:#4f9eff;" id="ap-balance">₹0</div>
+            <div class="auth-preview-stat-lbl">Net Balance</div>
+          </div>
+          <div class="auth-preview-stat">
+            <div class="auth-preview-stat-val" style="color:#00e5a0;" id="ap-income">₹0</div>
+            <div class="auth-preview-stat-lbl">Income</div>
+          </div>
+          <div class="auth-preview-stat">
+            <div class="auth-preview-stat-val" style="color:#ff5e7e;" id="ap-expense">₹0</div>
+            <div class="auth-preview-stat-lbl">Expenses</div>
+          </div>
+          <div class="auth-preview-stat">
+            <div class="auth-preview-stat-val" style="color:#a78bfa;" id="ap-savings">0%</div>
+            <div class="auth-preview-stat-lbl">Saved</div>
+          </div>
+        </div>
+
+        <!-- Mini bar chart -->
+        <div class="auth-chart" id="ap-chart"></div>
+
+        <!-- Recent transactions -->
+        <div class="auth-txs" id="ap-txs"></div>
+      </div>
+
+      <!-- Big scrolling code words -->
+      <div class="auth-code-strip">
+        <div class="auth-code-track" id="auth-code-track">
+          <!-- JS will populate & duplicate for seamless loop -->
+        </div>
+      </div>
+
+      <!-- Feature pills 2×2 grid -->
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon" style="background:rgba(79,158,255,.15);">🏦</div>
+          <div class="auth-feature-text"><strong>Import Statements</strong>SBI, HDFC, ICICI, Axis & more</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon" style="background:rgba(0,229,160,.12);">📊</div>
+          <div class="auth-feature-text"><strong>Live Charts</strong>Monthly income vs expense</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon" style="background:rgba(167,139,250,.12);">🌍</div>
+          <div class="auth-feature-text"><strong>180+ Currencies</strong>Switch display instantly</div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon" style="background:rgba(244,114,182,.12);">☁️</div>
+          <div class="auth-feature-text"><strong>Cloud Synced</strong>All devices, always up to date</div>
+        </div>
+      </div>
     </div>
-    <div id="auth-error" class="auth-error"></div>
-    <div id="auth-success" class="auth-success"></div>
-    <button class="auth-google-btn" id="btn-google" onclick="authGoogle()">
-      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.5 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.5 29.4 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.3 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.3C9.6 35.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.3 5.6l6.2 5.2C41.1 35.2 44 30 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
-      Continue with Google
-    </button>
-    <div class="auth-divider">or</div>
-    <div id="form-login">
-      <div class="auth-field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')authLogin()"></div>
-      <div class="auth-field"><label>Password</label><input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')authLogin()"></div>
-      <button class="auth-btn" id="btn-login" onclick="authLogin()">Sign In →</button>
-      <div class="auth-switch">Forgot password? <span onclick="authResetPassword()">Send reset email</span></div>
-    </div>
-    <div id="form-signup" style="display:none">
-      <div class="auth-field"><label>Email</label><input type="email" id="signup-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')authSignup()"></div>
-      <div class="auth-field"><label>Password</label><input type="password" id="signup-pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')authSignup()"></div>
-      <div class="auth-field"><label>Confirm Password</label><input type="password" id="signup-pass2" placeholder="Repeat password" onkeydown="if(event.key==='Enter')authSignup()"></div>
-      <button class="auth-btn" id="btn-signup" onclick="authSignup()">Create Account →</button>
-    </div>
-    <div id="auth-loading" class="auth-loading"><div class="auth-spinner"></div><span id="auth-loading-text">Please wait…</span></div>
   </div>
+
+  <!-- RIGHT: Form panel -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+      <div class="auth-form-logo">💸</div>
+      <div class="auth-form-title">Welcome back</div>
+      <div class="auth-form-sub">Sign in to your FinanceTrack account</div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login"  onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab"        id="tab-signup" onclick="switchTab('signup')">Create Account</button>
+      </div>
+
+      <div id="auth-error"   class="auth-error"></div>
+      <div id="auth-success" class="auth-success"></div>
+
+      <button class="auth-google-btn" id="btn-google" onclick="authGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.6 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.5 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3.1 0 5.8 1.1 7.9 3l5.7-5.7C34.2 6.5 29.4 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.3 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8H6.3C9.6 35.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.3 5.6l6.2 5.2C41.1 35.2 44 30 44 24c0-1.2-.1-2.4-.4-3.5z"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="auth-divider">or</div>
+
+      <!-- Sign In form -->
+      <div id="form-login">
+        <div class="auth-field">
+          <label>Email</label>
+          <span class="auth-field-icon">✉️</span>
+          <input type="email" id="login-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')authLogin()">
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <span class="auth-field-icon">🔒</span>
+          <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')authLogin()">
+        </div>
+        <button class="auth-btn" id="btn-login" onclick="authLogin()">Sign In →</button>
+        <div class="auth-switch">Forgot password? <span onclick="authResetPassword()">Send reset email</span></div>
+      </div>
+
+      <!-- Create Account form -->
+      <div id="form-signup" style="display:none">
+        <div class="auth-field">
+          <label>Email</label>
+          <span class="auth-field-icon">✉️</span>
+          <input type="email" id="signup-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')authSignup()">
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <span class="auth-field-icon">🔒</span>
+          <input type="password" id="signup-pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')authSignup()">
+        </div>
+        <div class="auth-field">
+          <label>Confirm Password</label>
+          <span class="auth-field-icon">🔑</span>
+          <input type="password" id="signup-pass2" placeholder="Repeat password" onkeydown="if(event.key==='Enter')authSignup()">
+        </div>
+        <button class="auth-btn" id="btn-signup" onclick="authSignup()">Create Account →</button>
+      </div>
+
+      <div id="auth-loading" class="auth-loading">
+        <div class="auth-spinner"></div>
+        <span id="auth-loading-text">Please wait…</span>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div id="main-app" style="display:none">
@@ -1432,6 +1850,7 @@
 
     <!-- Banner + avatar -->
     <div class="profile-banner">
+      <div class="profile-banner-inner"></div>
       <div class="profile-avatar-wrap">
         <div class="profile-avatar-big" id="profile-avatar-big" title="Change photo">
           <span id="profile-avatar-initials">?</span>
@@ -2975,7 +3394,17 @@
   function getDateRange(){return{from:document.getElementById('date-from')?.value||'',to:document.getElementById('date-to')?.value||''};}
 
   // ── AUTH ──
-  function switchTab(t){document.getElementById('form-login').style.display=t==='login'?'':'none';document.getElementById('form-signup').style.display=t==='signup'?'':'none';document.getElementById('tab-login').classList.toggle('active',t==='login');document.getElementById('tab-signup').classList.toggle('active',t==='signup');clearAuthMsg();}
+  function switchTab(t){
+    document.getElementById('form-login').style.display=t==='login'?'':'none';
+    document.getElementById('form-signup').style.display=t==='signup'?'':'none';
+    document.getElementById('tab-login').classList.toggle('active',t==='login');
+    document.getElementById('tab-signup').classList.toggle('active',t==='signup');
+    const sub=document.getElementById('auth-form-sub') || document.querySelector('.auth-form-sub');
+    if(sub) sub.textContent = t==='login' ? 'Sign in to your FinanceTrack account' : 'Create your free account in seconds';
+    const title=document.querySelector('.auth-form-title');
+    if(title) title.textContent = t==='login' ? 'Welcome back' : 'Get started free';
+    clearAuthMsg();
+  }
   function setAuthBusy(on,msg){document.getElementById('auth-loading').style.display=on?'flex':'none';if(msg)document.getElementById('auth-loading-text').textContent=msg;['btn-login','btn-signup','btn-google'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=on;});}
   function showAuthError(msg){const e=document.getElementById('auth-error');e.textContent=msg;e.classList.add('visible');document.getElementById('auth-success').classList.remove('visible');}
   function showAuthSuccess(msg){const e=document.getElementById('auth-success');e.textContent=msg;e.classList.add('visible');document.getElementById('auth-error').classList.remove('visible');}
@@ -3260,6 +3689,156 @@
     const el = document.getElementById('reauth-msg');
     el.textContent = ''; el.classList.remove('visible');
   }
+
+  // ════════════════════════════════════════
+  // ── AUTH PAGE ANIMATIONS ──
+  // ════════════════════════════════════════
+  (function initAuthAnimations() {
+    // ── Big code word marquee ──
+    const codeWords = [
+      { text:'income += salary',        cls:'ck-green'  },
+      { text:'balance.toFixed(2)',       cls:'ck-blue'   },
+      { text:'expenses.filter(cat)',     cls:'ck-purple' },
+      { text:'₹ 1,24,500.00',           cls:'ck-amber'  },
+      { text:'transactions.push(tx)',    cls:'ck-cyan'   },
+      { text:'chart.update()',           cls:'ck-pink'   },
+      { text:'import("SBI.xlsx")',       cls:'ck-blue'   },
+      { text:'net = income - expense',   cls:'ck-green'  },
+      { text:'category = "food" 🍔',    cls:'ck-amber'  },
+      { text:'PDF.parse(password)',      cls:'ck-purple' },
+      { text:'firebase.sync()',          cls:'ck-cyan'   },
+      { text:'savings.grow()',           cls:'ck-green'  },
+      { text:'debit: 3,400',            cls:'ck-red'    },
+      { text:'credit: 52,000',          cls:'ck-green'  },
+      { text:'INR → USD 💱',            cls:'ck-pink'   },
+    ];
+    const track = document.getElementById('auth-code-track');
+    if (track) {
+      // build once, then duplicate for seamless loop
+      const buildSet = () => codeWords.map(w =>
+        `<span class="auth-code-word ${w.cls}">${w.text}</span>`
+      ).join('');
+      track.innerHTML = buildSet() + buildSet(); // duplicate = seamless
+    }
+
+    // ── Floating particles ──
+    const container = document.getElementById('auth-particles');
+    if (container) {
+      for (let i = 0; i < 22; i++) {
+        const p = document.createElement('div');
+        p.className = 'auth-particle';
+        const size = Math.random() * 3 + 1.5;
+        p.style.cssText = `
+          width:${size}px; height:${size}px;
+          left:${Math.random()*100}%;
+          bottom:${Math.random()*-20}%;
+          animation-duration:${Math.random()*14+10}s;
+          animation-delay:${Math.random()*10}s;
+          opacity:${Math.random()*.4+.1};
+        `;
+        container.appendChild(p);
+      }
+    }
+
+    // ── Animated counter ──
+    function animateCount(el, target, prefix, duration) {
+      const start = Date.now();
+      const fmt = n => prefix + (n >= 1e5
+        ? (n/1e5).toFixed(1)+'L'
+        : n >= 1000
+          ? (n/1000).toFixed(1)+'K'
+          : Math.round(n));
+      (function tick() {
+        const p = Math.min((Date.now()-start)/duration, 1);
+        const ease = 1 - Math.pow(1-p, 3);
+        el.textContent = fmt(target * ease);
+        if (p < 1) requestAnimationFrame(tick);
+        else el.textContent = fmt(target);
+      })();
+    }
+
+    // ── Build bar chart ──
+    const chartData = [
+      {inc:62,exp:38},{inc:45,exp:55},{inc:78,exp:42},
+      {inc:55,exp:30},{inc:88,exp:60},{inc:70,exp:45}
+    ];
+    const months = ['Oct','Nov','Dec','Jan','Feb','Mar'];
+    const chartEl = document.getElementById('ap-chart');
+    if (chartEl) {
+      chartEl.innerHTML = chartData.map((d,i) => `
+        <div class="auth-bar-group" style="flex-direction:column-reverse;height:100%;justify-content:flex-start;align-items:center;gap:3px;position:relative;">
+          <div style="display:flex;gap:2px;align-items:flex-end;width:100%;height:calc(100% - 14px);">
+            <div class="auth-bar inc" style="height:${d.inc}%;animation-delay:${i*0.08}s;"></div>
+            <div class="auth-bar exp" style="height:${d.exp}%;animation-delay:${i*0.08+0.04}s;"></div>
+          </div>
+          <div style="font-size:.6rem;color:rgba(255,255,255,.3);font-weight:600;white-space:nowrap;">${months[i]}</div>
+        </div>
+      `).join('');
+    }
+
+    // ── Build transaction rows ──
+    const txData = [
+      {icon:'💼', bg:'rgba(0,229,160,.15)',  desc:'Salary Credit',         amt:'+₹52,000', col:'#00e5a0', delay:'.1s'},
+      {icon:'🍔', bg:'rgba(251,146,60,.15)', desc:'Swiggy Order',          amt:'-₹340',    col:'#ff5e7e', delay:'.25s'},
+      {icon:'🚗', bg:'rgba(79,158,255,.15)', desc:'Uber Cab',              amt:'-₹180',    col:'#ff5e7e', delay:'.4s'},
+      {icon:'📈', bg:'rgba(244,114,182,.15)',desc:'Zerodha Dividend',      amt:'+₹1,200',  col:'#00e5a0', delay:'.55s'},
+    ];
+    const txsEl = document.getElementById('ap-txs');
+    if (txsEl) {
+      txsEl.innerHTML = txData.map(t => `
+        <div class="auth-tx" style="animation-delay:${t.delay}">
+          <div class="auth-tx-icon" style="background:${t.bg}">${t.icon}</div>
+          <div class="auth-tx-desc">${t.desc}</div>
+          <div class="auth-tx-amt" style="color:${t.col}">${t.amt}</div>
+        </div>
+      `).join('');
+    }
+
+    // ── Animate counters (delayed so user sees them count up) ──
+    function animateSavings() {
+      const sav = document.getElementById('ap-savings');
+      if (!sav) return;
+      const start = Date.now();
+      (function tick() {
+        const p = Math.min((Date.now()-start)/1400, 1);
+        const ease = 1 - Math.pow(1-p, 3);
+        sav.textContent = Math.round(63 * ease) + '%';
+        if (p < 1) requestAnimationFrame(tick); else sav.textContent = '63%';
+      })();
+    }
+    setTimeout(() => {
+      const b = document.getElementById('ap-balance');
+      const inc = document.getElementById('ap-income');
+      const exp = document.getElementById('ap-expense');
+      if (b)   animateCount(b,   53680, '₹', 1600);
+      if (inc) animateCount(inc, 84200, '₹', 1400);
+      if (exp) animateCount(exp, 30520, '₹', 1500);
+      animateSavings();
+    }, 400);
+
+    // ── Re-animate on a loop so the preview stays lively ──
+    setInterval(() => {
+      document.querySelectorAll('.auth-bar').forEach(b => {
+        b.style.animation = 'none';
+        b.offsetHeight;
+        b.style.animation = '';
+      });
+      document.querySelectorAll('.auth-tx').forEach(t => {
+        t.style.animation = 'none';
+        t.offsetHeight;
+        t.style.animation = '';
+      });
+      setTimeout(() => {
+        const b   = document.getElementById('ap-balance');
+        const inc = document.getElementById('ap-income');
+        const exp = document.getElementById('ap-expense');
+        if (b)   animateCount(b,   53680, '₹', 1600);
+        if (inc) animateCount(inc, 84200, '₹', 1400);
+        if (exp) animateCount(exp, 30520, '₹', 1500);
+        animateSavings();
+      }, 200);
+    }, 7000);
+  })();
 
   fbAuth.onAuthStateChanged(user=>{
     if(user){
