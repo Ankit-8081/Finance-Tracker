@@ -644,10 +644,29 @@
     .btn-add:active { transform: translateY(0); }
 
     /* ── CHART ── */
-    .chart-wrapper {
-      position: relative;
-      height: 280px;
-    }
+    .chart-wrapper { position: relative; height: 280px; }
+    .chart-range-btn { padding:4px 11px;border-radius:16px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.76rem;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .15s; }
+    .chart-range-btn:hover  { border-color:#4f9eff;color:#4f9eff; }
+    .chart-range-btn.active { background:rgba(79,158,255,.15);border-color:#4f9eff;color:#4f9eff; }
+    .chart-nav-btn { padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.75rem;cursor:pointer;transition:all .15s;font-family:'Outfit',sans-serif; }
+    .chart-nav-btn:hover:not(:disabled) { border-color:rgba(255,255,255,.25);color:var(--text); }
+    .chart-nav-btn:disabled { opacity:.3;cursor:default; }
+    .pie-grid   { display:grid;grid-template-columns:1fr 1fr;gap:24px; }
+    .pie-wrapper{ position:relative;height:260px;display:flex;align-items:center;justify-content:center; }
+    .pie-legend { display:flex;flex-direction:column;gap:9px;justify-content:center;overflow-y:auto;max-height:280px;padding:4px 0; }
+    .pie-legend-item  { display:flex;align-items:center;gap:10px;font-size:.82rem;cursor:pointer;border-radius:8px;padding:5px 8px;transition:background .12s; }
+    .pie-legend-item:hover { background:var(--surface2); }
+    .pie-legend-dot   { width:11px;height:11px;border-radius:3px;flex-shrink:0; }
+    .pie-legend-label { flex:1;color:var(--text);font-weight:600; }
+    .pie-legend-pct   { color:var(--muted);font-weight:700;min-width:40px;text-align:right; }
+    .pie-legend-amt   { color:var(--muted);font-size:.75rem;min-width:76px;text-align:right; }
+    .pie-empty  { display:flex;flex-direction:column;align-items:center;justify-content:center;height:240px;color:var(--muted);font-size:.85rem;gap:8px;grid-column:1/-1; }
+    .pie-empty .emoji { font-size:2rem; }
+    .pie-tabs   { display:flex;gap:6px; }
+    .pie-tab    { padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.78rem;font-weight:700;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .15s; }
+    .pie-tab:hover  { border-color:#a78bfa;color:#a78bfa; }
+    .pie-tab.active { background:rgba(167,139,250,.15);border-color:#a78bfa;color:#a78bfa; }
+    @media(max-width:700px){ .pie-grid{grid-template-columns:1fr;} .pie-wrapper{height:200px;} }
 
     /* ── TRANSACTIONS PANEL ── */
     .transactions-panel {
@@ -1566,10 +1585,40 @@
 
     <!-- Monthly Chart -->
     <div class="panel">
-      <div class="panel-title"><span>📈</span> Monthly Overview</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+        <div class="panel-title" style="margin-bottom:0;"><span>📈</span> Monthly Overview</div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <div style="display:flex;gap:4px;">
+            <button class="chart-range-btn active" id="cr-3m"  onclick="setChartRange(3)">3M</button>
+            <button class="chart-range-btn"         id="cr-6m"  onclick="setChartRange(6)">6M</button>
+            <button class="chart-range-btn"         id="cr-12m" onclick="setChartRange(12)">1Y</button>
+            <button class="chart-range-btn"         id="cr-all" onclick="setChartRange(0)">All</button>
+          </div>
+          <div style="display:flex;gap:4px;">
+            <button class="chart-nav-btn" id="chart-prev" onclick="shiftChart(-1)">◀</button>
+            <button class="chart-nav-btn" id="chart-next" onclick="shiftChart(1)">▶</button>
+          </div>
+        </div>
+      </div>
+      <div id="chart-period-label" style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;"></div>
       <div class="chart-wrapper">
         <canvas id="monthlyChart"></canvas>
       </div>
+    </div>
+  </div>
+
+  <!-- Pie Chart -->
+  <div class="panel" style="margin-bottom:28px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+      <div class="panel-title" style="margin-bottom:0;"><span>🥧</span> Spending Breakdown</div>
+      <div class="pie-tabs">
+        <button class="pie-tab active" id="pie-tab-expense" onclick="setPieTab('expense')">Expenses</button>
+        <button class="pie-tab"        id="pie-tab-income"  onclick="setPieTab('income')">Income</button>
+      </div>
+    </div>
+    <div class="pie-grid" id="pie-grid">
+      <div class="pie-wrapper"><canvas id="pieChart"></canvas></div>
+      <div class="pie-legend" id="pie-legend"></div>
     </div>
   </div>
 
@@ -1608,7 +1657,7 @@
           <option value="income">Income Only</option>
           <option value="expense">Expense Only</option>
         </select>
-        <select class="filter-select" id="filter-cat" onchange="renderStats();renderList()">
+        <select class="filter-select" id="filter-cat" onchange="renderStats();renderList();renderPieChart()">
           <option value="all">All Categories</option>
           <option value="salary">💼 Salary</option>
           <option value="freelance">💻 Freelance</option>
@@ -2326,6 +2375,7 @@
     renderStats();
     renderList();
     renderChart();
+    renderPieChart();
   }
 
   // ── STATS ──
@@ -2418,34 +2468,85 @@
   }
 
   // ── CHART ──
-  function renderChart() {
-    if (typeof Chart === 'undefined') {
-      console.warn('Chart.js not yet loaded — skipping chart render');
-      return;
+  // ── CHART STATE ──────────────────────────────────────────────────────────
+  let chartRangeMonths = 3;
+  let chartOffset      = 0;
+
+  function setChartRange(n) {
+    chartRangeMonths = n; chartOffset = 0;
+    ['3m','6m','12m','all'].forEach(id => document.getElementById('cr-'+id)?.classList.remove('active'));
+    document.getElementById('cr-'+({3:'3m',6:'6m',12:'12m',0:'all'})[n])?.classList.add('active');
+    renderChart();
+  }
+
+  function shiftChart(dir) {
+    const all = getAllMonths();
+    const max = Math.max(0, all.length - chartRangeMonths);
+    chartOffset = Math.min(max, Math.max(0, chartOffset - dir));
+    renderChart();
+  }
+
+  function getAllMonths() {
+    const set = new Set();
+    transactions.forEach(t => { if (t.cat !== 'cash') set.add(t.date.slice(0,7)); });
+    const sorted = [...set].sort();
+    if (sorted.length < 2) return sorted;
+    const result = [];
+    let cur = new Date(sorted[0]+'-01');
+    const end = new Date(sorted[sorted.length-1]+'-01');
+    while (cur <= end) {
+      result.push(cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0'));
+      cur.setMonth(cur.getMonth()+1);
     }
-    const months = getLast6Months();
-    const incomeData  = months.map(m => sumByMonth(m, 'income'));
-    const expenseData = months.map(m => sumByMonth(m, 'expense'));
-    const labels = months.map(m => {
-      const [y, mo] = m.split('-');
-      return new Date(y, mo - 1).toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-    });
+    return result;
+  }
+
+  function renderChart() {
+    if (typeof Chart === 'undefined') return;
+    const allMonths = getAllMonths();
+    if (!allMonths.length) { if (chart) { chart.destroy(); chart = null; } return; }
+
+    let months;
+    if (chartRangeMonths === 0) {
+      months = allMonths; chartOffset = 0;
+    } else {
+      const endIdx   = allMonths.length - 1 - chartOffset;
+      const startIdx = Math.max(0, endIdx - chartRangeMonths + 1);
+      months = allMonths.slice(startIdx, endIdx + 1);
+    }
+
+    const maxOff = chartRangeMonths === 0 ? 0 : Math.max(0, allMonths.length - chartRangeMonths);
+    const pb = document.getElementById('chart-prev'), nb = document.getElementById('chart-next');
+    if (pb) pb.disabled = chartRangeMonths === 0 || chartOffset >= maxOff;
+    if (nb) nb.disabled = chartRangeMonths === 0 || chartOffset <= 0;
+
+    const fmtLbl = m => { const [y,mo]=m.split('-'); return new Date(y,mo-1).toLocaleDateString('en-US',{month:'short',year:'2-digit'}); };
+    const pel = document.getElementById('chart-period-label');
+    if (pel && months.length)
+      pel.textContent = months.length===1 ? fmtLbl(months[0])
+        : fmtLbl(months[0])+' – '+fmtLbl(months[months.length-1])+'  ('+months.length+' months)';
+
+    const incomeData  = months.map(m => sumByMonth(m,'income'));
+    const expenseData = months.map(m => sumByMonth(m,'expense'));
+    const netData     = months.map((_,i) => incomeData[i] - expenseData[i]); // kept for tooltip
 
     if (chart) chart.destroy();
-
     const ctx = document.getElementById('monthlyChart').getContext('2d');
 
     chart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels,
+        labels: months.map(fmtLbl),
         datasets: [
+
           {
             label: 'Income',
             data: incomeData,
             backgroundColor: 'rgba(0,229,160,0.75)',
             borderRadius: 6,
             borderSkipped: false,
+            yAxisID: 'y',
+            order: 2,
           },
           {
             label: 'Expense',
@@ -2453,12 +2554,15 @@
             backgroundColor: 'rgba(255,94,126,0.75)',
             borderRadius: 6,
             borderSkipped: false,
+            yAxisID: 'y',
+            order: 2,
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: {
             labels: {
@@ -2476,45 +2580,133 @@
             bodyColor: '#7a8aa0',
             padding: 12,
             callbacks: {
-              label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`
+              label: ctx => {
+                const v = ctx.parsed.y;
+                if (ctx.dataset.label === 'Net')
+                  return ' Net: '+(v>=0?'+':'')+fmt(v);
+                const tot=(incomeData[ctx.dataIndex]||0)+(expenseData[ctx.dataIndex]||0);
+                const pct=tot>0?' ('+((v/tot)*100).toFixed(1)+'%)':'';
+                return ' '+ctx.dataset.label+': '+fmt(v)+pct;
+              }
             }
           }
         },
         scales: {
           x: {
             grid: { color: 'rgba(255,255,255,0.04)' },
-            ticks: { color: '#7a8aa0', font: { family: 'Plus Jakarta Sans', size: 11 } },
+            ticks: {
+              color: '#7a8aa0',
+              font: { family: 'Plus Jakarta Sans', size: 11 },
+              maxRotation: months.length > 12 ? 45 : 0,
+              autoSkip: true,
+              maxTicksLimit: 18,
+            }
           },
+          // Left axis — bars only
           y: {
+            position: 'left',
             grid: { color: 'rgba(255,255,255,0.04)' },
             ticks: {
               color: '#7a8aa0',
               font: { family: 'Plus Jakarta Sans', size: 11 },
-              callback: v => {
-                const sym = activeCurrency.symbol;
-                return sym + (v >= 1000 ? (v/1000).toFixed(1)+'k' : v);
-              }
+              callback: v => { const s=activeCurrency.symbol,a=Math.abs(v); return s+(a>=1000?(a/1000).toFixed(1)+'k':a); }
             }
-          }
+          },
+
         }
       }
     });
   }
 
-  function getLast6Months() {
-    const months = [];
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
-    }
-    return months;
-  }
-
   function sumByMonth(monthStr, type) {
     return transactions
-      .filter(t => t.type === type && t.date.startsWith(monthStr))
-      .reduce((s, t) => s + t.amount, 0);
+      .filter(t => t.type===type && t.cat!=='cash' && t.date.startsWith(monthStr))
+      .reduce((s,t)=>s+t.amount, 0);
+  }
+
+  // ── PIE CHART ─────────────────────────────────────────────────────────────
+  let pieChart = null;
+  let pieTab   = 'expense';
+
+  const PIE_COLORS = {
+    salary:'#4f9eff',freelance:'#22d3ee',investment:'#a78bfa',
+    food:'#fb923c',transport:'#facc15',housing:'#60a5fa',
+    health:'#f472b6',shopping:'#34d399',atm:'#fbbf24',cash:'#84cc16',other:'#7a8aa0',
+  };
+
+  function setPieTab(tab) {
+    pieTab = tab;
+    document.getElementById('pie-tab-expense').classList.toggle('active', tab==='expense');
+    document.getElementById('pie-tab-income').classList.toggle('active',  tab==='income');
+    renderPieChart();
+  }
+
+  function renderPieChart() {
+    if (typeof Chart === 'undefined') return;
+    const { from:drFrom, to:drTo } = getDateRange();
+    const filterCat = (document.getElementById('filter-cat')||{}).value||'all';
+
+    const scoped = transactions.filter(t => {
+      if (t.type !== pieTab) return false;
+      if (t.cat === 'cash' && filterCat !== 'cash') return false;
+      if (filterCat !== 'all' && t.cat !== filterCat) return false;
+      if (drFrom && t.date < drFrom) return false;
+      if (drTo   && t.date > drTo)   return false;
+      return true;
+    });
+
+    const totals = {};
+    scoped.forEach(t => { totals[t.cat]=(totals[t.cat]||0)+t.amount; });
+    const entries = Object.entries(totals).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+
+    const grid = document.getElementById('pie-grid');
+    if (!entries.length) {
+      if (pieChart) { pieChart.destroy(); pieChart=null; }
+      grid.innerHTML=`<div class="pie-empty"><div class="emoji">🥧</div><span>No ${pieTab} data to show</span></div>`;
+      return;
+    }
+    if (!document.getElementById('pieChart'))
+      grid.innerHTML=`<div class="pie-wrapper"><canvas id="pieChart"></canvas></div><div class="pie-legend" id="pie-legend"></div>`;
+
+    const total  = entries.reduce((s,[,v])=>s+v,0);
+    const colors = entries.map(([k])=>PIE_COLORS[k]||'#7a8aa0');
+
+    if (pieChart) pieChart.destroy();
+    pieChart = new Chart(document.getElementById('pieChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: entries.map(([k])=>catMeta[k]?.label||k),
+        datasets:[{data:entries.map(([,v])=>v),backgroundColor:colors.map(c=>c+'cc'),borderColor:colors,borderWidth:2,hoverOffset:8}]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false, cutout:'62%',
+        plugins: {
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:'#1a2236',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
+            titleColor:'#e8edf5',bodyColor:'#7a8aa0',padding:12,
+            callbacks:{label:ctx=>' '+fmt(ctx.parsed)+' ('+((ctx.parsed/total)*100).toFixed(1)+'%)'}
+          }
+        }
+      }
+    });
+
+    const el = document.getElementById('pie-legend');
+    if (el) el.innerHTML = entries.map(([k,v])=>{
+      const pct=((v/total)*100).toFixed(1), color=PIE_COLORS[k]||'#7a8aa0', meta=catMeta[k]||catMeta.other;
+      return `<div class="pie-legend-item" onclick="filterByCat('${k}')">
+        <div class="pie-legend-dot" style="background:${color}"></div>
+        <span class="pie-legend-label">${meta.icon} ${meta.label}</span>
+        <span class="pie-legend-pct">${pct}%</span>
+        <span class="pie-legend-amt">${fmt(v)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function filterByCat(cat) {
+    const el=document.getElementById('filter-cat');
+    if(el){el.value=cat;renderStats();renderList();renderPieChart();}
+    document.querySelector('.transactions-panel')?.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
   // ── EXPORT CSV ──
