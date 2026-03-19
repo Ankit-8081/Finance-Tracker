@@ -2,8 +2,8 @@
   "name": "FinanceTracker",
   "short_name": "Finance",
   "description": "Track your income and expenses — with bank statement import, charts, and offline support.",
-  "start_url": "/index.html",
-  "scope": "/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#0b0f1a",
@@ -15,17 +15,17 @@
   ],
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/icon-1024.jpg",
+      "src": "icon-1024.jpg",
       "sizes": "1024x1024",
       "type": "image/jpeg"
     }
@@ -36,10 +36,10 @@
       "name": "Add Income",
       "short_name": "Income",
       "description": "Quickly add an income transaction",
-      "url": "/index.html?action=add-income",
+      "url": "./index.html?action=add-income",
       "icons": [
         {
-          "src": "/icon-192.png",
+          "src": "icon-192.png",
           "sizes": "192x192"
         }
       ]
@@ -48,10 +48,10 @@
       "name": "Add Expense",
       "short_name": "Expense",
       "description": "Quickly add an expense transaction",
-      "url": "/index.html?action=add-expense",
+      "url": "./index.html?action=add-expense",
       "icons": [
         {
-          "src": "/icon-192.png",
+          "src": "icon-192.png",
           "sizes": "192x192"
         }
       ]
