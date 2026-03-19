@@ -2,7 +2,7 @@
   "name": "FinanceTracker",
   "short_name": "Finance",
   "description": "Track your income and expenses — with bank statement import, charts, and offline support.",
-  "start_url": "/Finance_Tracker_Fixed.html",
+  "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
@@ -36,7 +36,7 @@
       "name": "Add Income",
       "short_name": "Income",
       "description": "Quickly add an income transaction",
-      "url": "/Finance_Tracker_Fixed.html?action=add-income",
+      "url": "/index.html?action=add-income",
       "icons": [
         {
           "src": "/icon-192.png",
@@ -48,7 +48,7 @@
       "name": "Add Expense",
       "short_name": "Expense",
       "description": "Quickly add an expense transaction",
-      "url": "/Finance_Tracker_Fixed.html?action=add-expense",
+      "url": "/index.html?action=add-expense",
       "icons": [
         {
           "src": "/icon-192.png",
