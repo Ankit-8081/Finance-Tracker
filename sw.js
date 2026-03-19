@@ -10,7 +10,7 @@ const CDN_CACHE   = SW_VERSION + '-cdn';
 
 const SHELL_ASSETS = [
   './',
-  './Finance_Tracker_Fixed.html',
+  './index.html',
   './manifest.json',
   './icon-192.png',
   './icon-1024.jpg',
@@ -122,7 +122,7 @@ self.addEventListener('fetch', e => {
               }
               return res;
             })
-            .catch(() => caches.match('./Finance_Tracker_Fixed.html'));
+            .catch(() => caches.match('./index.html'));
         })
     );
   }
