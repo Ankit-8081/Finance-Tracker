@@ -5781,11 +5781,11 @@
     e.preventDefault();
     window._deferredInstallPrompt = e;
     console.log('[PWA] Install prompt captured');
-    // Show immediately if button is already visible (e.g. prompt fires late)
+    // Always set inline display — if #main-app is still hidden the button
+    // will appear automatically once it becomes visible; if the user is
+    // already logged in it shows immediately.
     const btn = document.getElementById('btn-pwa-install');
-    if (btn && btn.offsetParent !== null) {
-      btn.style.display = 'inline-block';
-    }
+    if (btn) btn.style.display = 'inline-block';
   });
 
   // Called by onAuthStateChanged after #main-app is shown
