@@ -1,0 +1,60 @@
+{
+  "name": "FinanceTracker",
+  "short_name": "Finance",
+  "description": "Track your income and expenses — with bank statement import, charts, and offline support.",
+  "start_url": "/Finance_Tracker_Fixed.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b0f1a",
+  "theme_color": "#0b0f1a",
+  "lang": "en",
+  "categories": [
+    "finance",
+    "productivity"
+  ],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-1024.jpg",
+      "sizes": "1024x1024",
+      "type": "image/jpeg"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Add Income",
+      "short_name": "Income",
+      "description": "Quickly add an income transaction",
+      "url": "/Finance_Tracker_Fixed.html?action=add-income",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Add Expense",
+      "short_name": "Expense",
+      "description": "Quickly add an expense transaction",
+      "url": "/Finance_Tracker_Fixed.html?action=add-expense",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
