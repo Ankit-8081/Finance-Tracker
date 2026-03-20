@@ -1,19 +1,19 @@
-// FinanceTracker Service Worker v3
+// FinanceTracker Service Worker v5
 // Strategy:
 //   - App shell (index.html)  → cache-first
 //   - CDN assets               → stale-while-revalidate
 //   - Firebase / auth / DB     → network-only (never cache tokens)
 
-const SW_VERSION  = 'ft-v4';
+const SW_VERSION  = 'ft-v5';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const CDN_CACHE   = SW_VERSION + '-cdn';
 
 const SHELL_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-1024.jpg',
+  '/Finance-Tracker/',
+  '/Finance-Tracker/index.html',
+  '/Finance-Tracker/manifest.json',
+  '/Finance-Tracker/icon-192.png',
+  '/Finance-Tracker/icon-1024.jpg',
 ];
 
 const CDN_ORIGINS = [
@@ -36,7 +36,7 @@ const FIREBASE_HOSTS = [
 
 // ── Install: pre-cache the app shell ──
 self.addEventListener('install', e => {
-  console.log('[SW] Installing ft-v4...');
+  console.log('[SW] Installing ft-v5...');
   self.skipWaiting();
   e.waitUntil(
     caches.open(SHELL_CACHE).then(cache => {
@@ -55,7 +55,7 @@ self.addEventListener('install', e => {
 
 // ── Activate: purge stale caches ──
 self.addEventListener('activate', e => {
-  console.log('[SW] Activating ft-v4...');
+  console.log('[SW] Activating ft-v5...');
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
