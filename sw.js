@@ -4,7 +4,7 @@
 //   - CDN assets               → stale-while-revalidate
 //   - Firebase / auth / DB     → network-only (never cache tokens)
 
-const SW_VERSION  = 'ft-v3';
+const SW_VERSION  = 'ft-v4';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const CDN_CACHE   = SW_VERSION + '-cdn';
 
@@ -36,7 +36,7 @@ const FIREBASE_HOSTS = [
 
 // ── Install: pre-cache the app shell ──
 self.addEventListener('install', e => {
-  console.log('[SW] Installing ft-v3...');
+  console.log('[SW] Installing ft-v4...');
   self.skipWaiting();
   e.waitUntil(
     caches.open(SHELL_CACHE).then(cache => {
@@ -55,7 +55,7 @@ self.addEventListener('install', e => {
 
 // ── Activate: purge stale caches ──
 self.addEventListener('activate', e => {
-  console.log('[SW] Activating ft-v3...');
+  console.log('[SW] Activating ft-v4...');
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
