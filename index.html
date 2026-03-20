@@ -330,7 +330,6 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.25s;
-      overflow-y: auto; /* lets the overlay itself scroll on short viewports */
     }
     .modal-overlay.active { opacity: 1; pointer-events: all; }
 
@@ -340,13 +339,19 @@
       border-radius: 18px;
       width: 100%;
       max-width: 620px;
-      max-height: 90vh;
+      max-height: calc(100vh - 40px);
       overflow-y: auto;
       box-shadow: 0 30px 80px rgba(0,0,0,0.7);
-      transform: translateY(20px) scale(0.97);
-      transition: transform 0.25s;
+      transform: translateY(24px) scale(0.97);
+      transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.2s;
+      opacity: 0;
+      pointer-events: none;
     }
-    .modal-overlay.active .modal { transform: translateY(0) scale(1); }
+    .modal-overlay.active .modal {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+      pointer-events: all;
+    }
     .modal::-webkit-scrollbar { width: 4px; }
     .modal::-webkit-scrollbar-thumb { background: rgba(244,114,182,0.3); border-radius: 4px; }
 
@@ -735,93 +740,7 @@
       height: 280px;
     }
 
-    /* ── CATEGORY BREAKDOWN (Doughnut) ── */
-    .breakdown-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-bottom: 28px;
-    }
-    .breakdown-chart-wrap {
-      position: relative;
-      height: 220px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .breakdown-center-label {
-      position: absolute;
-      text-align: center;
-      pointer-events: none;
-    }
-    .breakdown-center-label .bc-val {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.3rem;
-      font-weight: 800;
-      color: var(--text);
-      display: block;
-    }
-    .breakdown-center-label .bc-sub {
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-    }
-    .breakdown-legend {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      justify-content: center;
-      max-height: 220px;
-      overflow-y: auto;
-      padding-right: 4px;
-    }
-    .breakdown-legend::-webkit-scrollbar { width: 3px; }
-    .breakdown-legend::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-    .bl-item {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 5px 8px;
-      border-radius: 7px;
-      cursor: pointer;
-      transition: background 0.12s;
-    }
-    .bl-item:hover { background: rgba(255,255,255,0.05); }
-    .bl-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-      flex-shrink: 0;
-    }
-    .bl-name {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text);
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .bl-pct {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--muted);
-      font-family: 'Outfit', sans-serif;
-    }
-    .bl-amt {
-      font-size: 0.75rem;
-      color: var(--muted);
-      font-family: 'Outfit', sans-serif;
-      margin-left: 4px;
-    }
-    @media (max-width: 900px) {
-      .breakdown-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 480px) {
-      .breakdown-chart-wrap { height: 180px; }
-    }
+
 
     /* ── TRANSACTIONS PANEL ── */
     .transactions-panel {
@@ -941,6 +860,36 @@
       line-height: 1;
     }
     .btn-delete:hover { background: rgba(255,94,126,0.15); border-color: var(--red); color: var(--red); }
+
+    /* 🔒 Lock icon for bank-imported transactions */
+    .btn-imported {
+      display: flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 8px;
+      border: 1px solid rgba(255,214,0,0.2);
+      background: rgba(255,214,0,0.07);
+      font-size: 0.78rem; flex-shrink: 0;
+      cursor: default; opacity: 0.65;
+      transition: opacity 0.15s;
+    }
+    .btn-imported:hover { opacity: 1; }
+
+    /* Subtle gold left border on imported transaction rows */
+    .tx-imported {
+      border-left: 2px solid rgba(255,214,0,0.28) !important;
+    }
+    .tx-imported:hover { border-left-color: rgba(255,214,0,0.55) !important; }
+
+    /* 🏦 Bank badge inline next to description */
+    .tx-bank-badge {
+      display: inline-flex; align-items: center; gap: 2px;
+      font-size: 0.58rem; font-weight: 700; letter-spacing: 0.5px;
+      color: rgba(255,214,0,0.8);
+      background: rgba(255,214,0,0.1);
+      border: 1px solid rgba(255,214,0,0.22);
+      border-radius: 4px; padding: 1px 5px;
+      margin-left: 6px; vertical-align: middle;
+      text-transform: uppercase; user-select: none;
+    }
     .filter-select { width:auto; padding:8px 12px; font-size:.82rem; }
 
     /* Empty state */
@@ -965,17 +914,17 @@
     .cat-atm        { background: rgba(251,191,36,0.15);  color: #fbbf24; }
     .cat-cash       { background: rgba(132,204,22,0.15);  color: #84cc16; }
 
-    .cat-icon-food       { background: rgba(251,146,60,0.2); }
-    .cat-icon-transport  { background: rgba(79,158,255,0.2); }
-    .cat-icon-housing    { background: rgba(167,139,250,0.2); }
-    .cat-icon-health     { background: rgba(255,94,126,0.2); }
-    .cat-icon-salary     { background: rgba(0,229,160,0.2); }
-    .cat-icon-freelance  { background: rgba(34,211,238,0.2); }
-    .cat-icon-investment { background: rgba(244,114,182,0.2); }
-    .cat-icon-shopping   { background: rgba(255,184,48,0.2); }
-    .cat-icon-other      { background: rgba(122,138,160,0.2); }
-    .cat-icon-atm        { background: rgba(251,191,36,0.2);  }
-    .cat-icon-cash       { background: rgba(132,204,22,0.2);  }
+    .cat-icon-health     { background: rgba(230,14,50,0.2); }     /* ❤️  deep crimson */
+    .cat-icon-housing    { background: rgba(244,182,163,0.2); }   /* 🏠 salmon peach */
+    .cat-icon-food       { background: rgba(251,127,18,0.2); }    /* 🍔 vivid orange */
+    .cat-icon-salary     { background: rgba(144,84,23,0.2); }     /* 💼 dark brown */
+    .cat-icon-other      { background: rgba(255,233,91,0.2); }    /* 🔖 bright yellow */
+    .cat-icon-cash       { background: rgba(153,242,63,0.2); }    /* 💵 neon lime */
+    .cat-icon-investment { background: rgba(38,216,127,0.2); }    /* 📈 emerald */
+    .cat-icon-atm        { background: rgba(75,222,245,0.2); }    /* 🏧 cyan */
+    .cat-icon-transport  { background: rgba(61,128,244,0.2); }    /* 🚗 royal blue */
+    .cat-icon-freelance  { background: rgba(130,94,237,0.2); }    /* 💻 violet */
+    .cat-icon-shopping   { background: rgba(235,60,235,0.2); }    /* 🛍 magenta */
 
     /* Toast */
     /* ══════════════════════════════════════════
@@ -1037,6 +986,126 @@
     .skel-amount { width: 72px; height: 18px; border-radius: 6px; margin-left: auto; flex-shrink: 0; }
 
     /* ── Chart skeleton ── */
+    /* ═══ PIE CHART PANEL — Ultra Vivid ═══ */
+    #pie-legend { overflow-y: auto; padding-right: 6px; max-height: 310px; }
+    #pie-legend::-webkit-scrollbar { width: 3px; }
+    #pie-legend::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg,#C68642,#F43F5E,#22D3EE,#34D399);
+      border-radius: 4px;
+    }
+    #pie-body { display: grid; grid-template-columns: 300px 1fr auto; align-items: center; gap: 32px; }
+
+    /* Donut wrap — multi-layer glow bloom */
+    #pie-canvas-wrap {
+      position: relative; width: 300px; height: 300px; flex-shrink: 0;
+    }
+    /* outer diffuse bloom — icon-colour matched hues */
+    #pie-canvas-wrap::before {
+      content: '';
+      position: absolute; inset: -20px;
+      border-radius: 50%;
+      background: conic-gradient(
+        rgba(212,160,85,.30)  0deg,    /* 💼 leather brown  */
+        rgba(255,107,53,.30)  40deg,   /* 🍔 ketchup red    */
+        rgba(74,222,128,.28)  80deg,   /* 📈 emerald green  */
+        rgba(103,232,249,.28) 120deg,  /* 🏧 neon cyan      */
+        rgba(186,230,253,.26) 160deg,  /* 🚗 platinum blue  */
+        rgba(240,171,252,.28) 200deg,  /* 🛍 hot magenta    */
+        rgba(253,164,175,.28) 240deg,  /* ❤️  rose crimson  */
+        rgba(190,242,100,.28) 280deg,  /* 💵 neon lime      */
+        rgba(254,249,195,.26) 320deg,  /* 🔖 pure yellow    */
+        rgba(212,160,85,.30)  360deg   /* back to brown     */
+      );
+      filter: blur(22px);
+      pointer-events: none;
+      animation: pieConic 10s linear infinite;
+      opacity: .8;
+    }
+    /* inner sharp halo ring */
+    #pie-canvas-wrap::after {
+      content: '';
+      position: absolute; inset: -4px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,.04);
+      pointer-events: none;
+      box-shadow:
+        0 0 30px rgba(0,229,255,.12),
+        0 0 60px rgba(200,80,192,.10),
+        inset 0 0 20px rgba(255,255,255,.02);
+    }
+    @keyframes pieConic {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Legend rows — CSS grid so bars align perfectly across all rows */
+    .pie-leg-row {
+      display: grid;
+      grid-template-columns: 20px 14px 100px 1fr 44px 60px;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 8px;
+      border-radius: 9px;
+      transition: background .15s, transform .15s;
+      cursor: default;
+    }
+    .pie-leg-row:hover {
+      background: rgba(255,255,255,.07);
+      transform: translateX(4px);
+    }
+    /* bar track always full width of its column */
+    .pie-leg-bar {
+      width: 100%;
+      height: 7px;
+      background: rgba(255,255,255,.06);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .pie-leg-fill { height: 100%; border-radius: 4px; }
+    /* fixed-width text columns — right aligned */
+    .pie-leg-pct  { text-align: right; white-space: nowrap; }
+    .pie-leg-amt  { text-align: right; white-space: nowrap; }
+
+    /* Stats cards — vivid gradient borders */
+    .pie-stat-card {
+      border-radius: 13px; padding: 14px 16px;
+      position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .pie-stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.35); }
+    .pie-stat-card.purple {
+      background: linear-gradient(135deg,rgba(200,80,192,.18),rgba(65,88,208,.14));
+      border: 1px solid rgba(200,80,192,.4);
+      box-shadow: 0 0 18px rgba(200,80,192,.12), inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .pie-stat-card.green {
+      background: linear-gradient(135deg,rgba(118,255,3,.15),rgba(0,229,160,.11));
+      border: 1px solid rgba(118,255,3,.35);
+      box-shadow: 0 0 18px rgba(118,255,3,.10), inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    .pie-stat-card.amber {
+      background: linear-gradient(135deg,rgba(255,214,0,.18),rgba(255,152,0,.12));
+      border: 1px solid rgba(255,214,0,.4);
+      box-shadow: 0 0 18px rgba(255,214,0,.10), inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .pie-stat-lbl {
+      font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: rgba(180,200,230,.6); margin-bottom: 5px;
+    }
+    .pie-stat-val { font-size: 1.05rem; font-weight: 900; color: #fff; }
+    .pie-stat-sub { font-size: .72rem; font-weight: 600; margin-top: 3px; }
+
+    @media (max-width: 960px) {
+      #pie-body { grid-template-columns: 300px 1fr; }
+      #pie-stats-panel { display: none !important; }
+    }
+    @media (max-width: 640px) {
+      #pie-body { grid-template-columns: 1fr; justify-items: center; }
+      #pie-canvas-wrap { width: 260px; height: 260px; }
+      #pie-legend { width: 100%; }
+    }
+
     .chart-skeleton {
       height: 280px;
       border-radius: 10px;
@@ -1310,8 +1379,8 @@
       .cat-select-box { display: none; }
       .tx-amount { width: auto; font-size: 0.95rem; }
 
-      /* Bigger touch targets for delete buttons (min 44×44px) */
-      .btn-delete {
+      /* Bigger touch targets for delete/lock buttons (min 44×44px) */
+      .btn-delete, .btn-imported {
         padding: 10px 12px;
         min-width: 44px;
         min-height: 44px;
@@ -1331,7 +1400,7 @@
       .tx-pagination { flex-direction: column; align-items: center; }
 
       /* Modals full-screen on mobile */
-      .modal { max-width: 100% !important; border-radius: 16px 16px 0 0 !important; margin-top: auto; }
+      .modal { max-width: 100% !important; border-radius: 20px 20px 0 0 !important; max-height: 92vh; }
       .modal-overlay { align-items: flex-end; padding: 0; }
 
       /* Profile modal */
@@ -1968,7 +2037,7 @@
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
     .cat-atm{background:rgba(251,191,36,.15);color:#fbbf24}
     .cat-cash{background:rgba(132,204,22,.15);color:#84cc16}
-    .cat-icon-atm{background:rgba(251,191,36,.2)}
+    .cat-icon-atm{background:rgba(34,211,238,.2)}
     .cat-icon-cash{background:rgba(132,204,22,.2)}
     .cat-select-box{font-size:.78rem;font-weight:600;padding:6px 26px 6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-color:rgba(255,255,255,.05);color:var(--text);width:140px;transition:border-color .15s,background-color .15s}
     .cat-select-box:hover{border-color:rgba(255,255,255,.28);background-color:rgba(255,255,255,.08)}
@@ -2339,7 +2408,7 @@
       <!-- Real app icon instead of emoji -->
       <img src="data:image/png;base64,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" class="auth-form-logo" alt="FinanceTracker logo">
       <div class="auth-form-title">Welcome back</div>
-      <div class="auth-form-sub">Sign in to your FinanceTracker account</div>
+      <div id="auth-form-sub" class="auth-form-sub">Sign in to your FinanceTracker account</div>
 
       <!-- Tabs with sliding indicator -->
       <div class="auth-tabs">
@@ -2428,10 +2497,6 @@
 
 </div>
 
-<!-- PERF: Offline banner — shown automatically when navigator.onLine === false -->
-<div id="offline-banner">
-  📡 You're offline — changes are saved locally and will sync when you reconnect.
-</div>
 
 <div id="main-app" style="display:none">
 <header>
@@ -2560,7 +2625,7 @@
         <input type="date" id="tx-date"/>
       </div>
 
-      <button class="btn-add" onclick="addTransaction()">+ Add Transaction</button>
+      <button id="btn-add" class="btn-add" onclick="addTransaction()">+ Add Transaction</button>
     </div>
 
     <!-- Monthly Chart -->
@@ -2587,40 +2652,59 @@
     </div>
   </div>
 
-  <!-- Category Breakdown Doughnut Charts -->
-  <div class="breakdown-grid">
-    <!-- Expense Breakdown -->
-    <div class="panel" style="opacity:0;animation:fadeSlideUp 0.45s ease 0.42s both;">
-      <div class="panel-title"><span>🍩</span> Expense Breakdown</div>
-      <div style="display:flex;gap:16px;align-items:center;">
-        <div class="breakdown-chart-wrap" style="flex:0 0 160px;">
-          <canvas id="expenseDonut" width="160" height="160"></canvas>
-          <div class="breakdown-center-label">
-            <span class="bc-val" id="expense-donut-total">—</span>
-            <span class="bc-sub">expenses</span>
-          </div>
+
+
+  <!-- Spending Breakdown Pie Chart -->
+  <div class="panel" id="pie-chart-panel" style="margin-bottom:24px;position:relative;">
+    <!-- top accent bar — icon-colour shimmer -->
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#E60E32,#FB7F12,#FFF58E,#99F23F,#26D87F,#4BDEF5,#3D80F4,#825EED,#EB3CEB,#E60E32);background-size:300% 100%;animation:pieBarShimmer 5s linear infinite;border-radius:var(--r) var(--r) 0 0;"></div>
+    <!-- header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:22px;padding-top:6px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#C850C0,#4158D0);display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 4px 16px rgba(200,80,192,.45),0 0 0 1px rgba(255,255,255,.08);">🥧</div>
+        <div>
+          <div style="font-size:1rem;font-weight:900;color:#fff;letter-spacing:-.3px;">Spending Breakdown</div>
+          <div style="font-size:.72rem;color:rgba(160,185,220,.7);" id="pie-subtitle">Category distribution</div>
         </div>
-        <div class="breakdown-legend" id="expense-donut-legend">
-          <div style="color:var(--muted);font-size:0.82rem;">No data yet</div>
+      </div>
+      <div style="display:flex;gap:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:4px;">
+        <button id="pie-toggle-expense" onclick="setPieMode('expense')" style="padding:6px 20px;border-radius:20px;border:none;background:linear-gradient(135deg,#FF4D6D,#FF9800);color:#fff;font-size:.75rem;font-weight:800;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 2px 12px rgba(255,77,109,.45),0 0 0 1px rgba(255,255,255,.08);">Expenses</button>
+        <button id="pie-toggle-income"  onclick="setPieMode('income')"  style="padding:6px 20px;border-radius:20px;border:none;background:transparent;color:rgba(160,185,220,.65);font-size:.75rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;transition:all .2s;">Income</button>
+      </div>
+    </div>
+    <!-- 3-column body -->
+    <div id="pie-body">
+      <!-- col 1: donut -->
+      <div id="pie-canvas-wrap">
+        <canvas id="pieChart" width="300" height="300"></canvas>
+        <div id="pie-center-label" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding:0 20px;">
+          <div id="pie-center-value" style="font-size:1.25rem;font-weight:900;color:#fff;letter-spacing:-.5px;text-align:center;line-height:1.2;word-break:break-all;transition:color .25s, text-shadow .25s, transform .25s;"></div>
+          <div id="pie-center-cat"   style="font-size:.65rem;font-weight:700;color:rgba(180,210,255,.65);margin-top:6px;text-align:center;max-width:110px;line-height:1.4;text-transform:uppercase;letter-spacing:.5px;"></div>
+        </div>
+      </div>
+      <!-- col 2: legend -->
+      <div id="pie-legend" style="display:flex;flex-direction:column;gap:2px;min-width:0;"></div>
+      <!-- col 3: right stats panel -->
+      <div id="pie-stats-panel" style="display:flex;flex-direction:column;gap:10px;min-width:168px;">
+        <div class="pie-stat-card purple">
+          <div class="pie-stat-lbl">Top Category</div>
+          <div id="pie-top-cat" class="pie-stat-val"></div>
+          <div id="pie-top-pct" class="pie-stat-sub" style="color:#d4bbff;"></div>
+        </div>
+        <div class="pie-stat-card green">
+          <div class="pie-stat-lbl">Categories</div>
+          <div id="pie-cat-count" class="pie-stat-val"></div>
+          <div class="pie-stat-sub" style="color:#00e5a0;">active buckets</div>
+        </div>
+        <div class="pie-stat-card amber">
+          <div class="pie-stat-lbl">Avg / Category</div>
+          <div id="pie-avg" class="pie-stat-val"></div>
+          <div class="pie-stat-sub" style="color:#fb923c;">per bucket</div>
         </div>
       </div>
     </div>
-
-    <!-- Income Breakdown -->
-    <div class="panel" style="opacity:0;animation:fadeSlideUp 0.45s ease 0.48s both;">
-      <div class="panel-title"><span>🍩</span> Income Breakdown</div>
-      <div style="display:flex;gap:16px;align-items:center;">
-        <div class="breakdown-chart-wrap" style="flex:0 0 160px;">
-          <canvas id="incomeDonut" width="160" height="160"></canvas>
-          <div class="breakdown-center-label">
-            <span class="bc-val" id="income-donut-total">—</span>
-            <span class="bc-sub">income</span>
-          </div>
-        </div>
-        <div class="breakdown-legend" id="income-donut-legend">
-          <div style="color:var(--muted);font-size:0.82rem;">No data yet</div>
-        </div>
-      </div>
+    <div id="pie-empty" style="display:none;text-align:center;padding:44px 0;color:var(--muted);font-size:.9rem;">
+      <div style="font-size:2rem;margin-bottom:8px;opacity:.4;">💸</div>No data for selected period
     </div>
   </div>
 
@@ -2696,357 +2780,8 @@
 
 </main>
 
-<!-- ── DELETE ALL CONFIRMATION MODAL ── -->
-<div class="modal-overlay" id="delete-overlay" onclick="if(event.target===this)closeDeleteModal()">
-  <div class="modal" style="max-width:420px;">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" style="background:linear-gradient(90deg,#ff5e7e,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">🗑 Delete All Transactions</div>
-        <div class="modal-sub">This action cannot be undone</div>
-      </div>
-      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div style="background:rgba(255,94,126,0.08);border:1px solid rgba(255,94,126,0.25);border-radius:10px;padding:16px;margin-bottom:20px;font-size:0.88rem;color:var(--muted);line-height:1.6;">
-        ⚠️ You are about to permanently delete <strong id="delete-count" style="color:var(--text);">all</strong> transactions. Your exported CSV files will not be affected.
-      </div>
-      <div class="modal-actions">
-        <button class="btn-modal-sec" onclick="closeDeleteModal()">Cancel</button>
-        <button class="btn-modal-pri" onclick="deleteAll()" style="background:linear-gradient(135deg,#ff5e7e,#fb923c);">🗑 Yes, Delete All</button>
-      </div>
-    </div>
-  </div>
-</div>
 
-<!-- ── IMPORT MODAL ── -->
-<div class="modal-overlay" id="import-overlay" onclick="handleOverlayClick(event)">
-  <div class="modal" id="import-modal">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title">🏦 Import Bank Statement</div>
-        <div class="modal-sub">Supports SBI Net Banking Excel (.xlsx) & PDF · Plus HDFC, ICICI, Axis & more</div>
-      </div>
-      <button class="modal-close" onclick="closeImportModal()">✕</button>
-    </div>
-    <div class="modal-body">
 
-      <!-- Step indicators -->
-      <div class="steps">
-        <div class="step active" id="step-ind-1">
-          <div class="step-num">1</div>
-          <div class="step-label">Select Bank</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" id="step-ind-2">
-          <div class="step-num">2</div>
-          <div class="step-label">Upload File</div>
-        </div>
-        <div class="step-line"></div>
-        <div class="step" id="step-ind-3">
-          <div class="step-num">3</div>
-          <div class="step-label">Preview & Import</div>
-        </div>
-      </div>
-
-      <!-- STEP 1: Bank Selection -->
-      <div id="import-step-1">
-        <div class="bank-grid">
-          <div class="bank-btn selected" id="bank-auto" onclick="selectBank('auto')">
-            <div class="bank-btn-logo">🔍</div>
-            <div class="bank-btn-name">Auto Detect</div>
-          </div>
-          <div class="bank-btn" id="bank-sbi" onclick="selectBank('sbi')">
-            <div class="bank-btn-logo">🏛️</div>
-            <div class="bank-btn-name">SBI</div>
-          </div>
-          <div class="bank-btn" id="bank-hdfc" onclick="selectBank('hdfc')">
-            <div class="bank-btn-logo">🔵</div>
-            <div class="bank-btn-name">HDFC</div>
-          </div>
-          <div class="bank-btn" id="bank-icici" onclick="selectBank('icici')">
-            <div class="bank-btn-logo">🟠</div>
-            <div class="bank-btn-name">ICICI</div>
-          </div>
-          <div class="bank-btn" id="bank-axis" onclick="selectBank('axis')">
-            <div class="bank-btn-logo">🟣</div>
-            <div class="bank-btn-name">Axis</div>
-          </div>
-          <div class="bank-btn" id="bank-kotak" onclick="selectBank('kotak')">
-            <div class="bank-btn-logo">🔴</div>
-            <div class="bank-btn-name">Kotak</div>
-          </div>
-          <div class="bank-btn" id="bank-yes" onclick="selectBank('yes')">
-            <div class="bank-btn-logo">🟢</div>
-            <div class="bank-btn-name">Yes Bank</div>
-          </div>
-          <div class="bank-btn" id="bank-pnb" onclick="selectBank('pnb')">
-            <div class="bank-btn-logo">🟡</div>
-            <div class="bank-btn-name">PNB</div>
-          </div>
-          <div class="bank-btn" id="bank-bob" onclick="selectBank('bob')">
-            <div class="bank-btn-logo">🟤</div>
-            <div class="bank-btn-name">Bank of Baroda</div>
-          </div>
-          <div class="bank-btn" id="bank-idbi" onclick="selectBank('idbi')">
-            <div class="bank-btn-logo">⚪</div>
-            <div class="bank-btn-name">IDBI</div>
-          </div>
-          <div class="bank-btn" id="bank-canara" onclick="selectBank('canara')">
-            <div class="bank-btn-logo">🏦</div>
-            <div class="bank-btn-name">Canara</div>
-          </div>
-          <div class="bank-btn" id="bank-other" onclick="selectBank('other')">
-            <div class="bank-btn-logo">📄</div>
-            <div class="bank-btn-name">Other</div>
-          </div>
-        </div>
-
-        <div class="how-to" id="how-to-box">
-          <div class="how-to-title">💡 How to download your SBI Net Banking statement</div>
-          <ul class="how-to-steps" id="how-to-steps">
-            <li>Login to <strong>onlinesbi.sbi</strong> → My Accounts & Profile</li>
-            <li>Click <strong>Account Statement</strong> → select your date range</li>
-            <li>Click <strong>Download</strong> → choose <strong>Excel</strong> (recommended) or <strong>PDF</strong></li>
-            <li>Upload that file here — no changes needed!</li>
-          </ul>
-        </div>
-
-        <div class="modal-actions" style="margin-top:18px;">
-          <button class="btn-modal-sec" onclick="closeImportModal()">Cancel</button>
-          <button class="btn-modal-pri" onclick="goToStep(2)">Next: Upload File →</button>
-        </div>
-      </div>
-
-      <!-- STEP 2: Upload -->
-      <div id="import-step-2" style="display:none;">
-        <div class="drop-zone" id="drop-zone"
-          ondragover="handleDragOver(event)"
-          ondragleave="handleDragLeave(event)"
-          ondrop="handleDrop(event)">
-          <input type="file" id="csv-file-input" accept=".csv,.xls,.xlsx,.pdf" onchange="handleFileSelect(event)" />
-          <div class="drop-icon" id="drop-icon">📂</div>
-          <div class="drop-title" id="drop-title">Drop your statement here</div>
-          <div class="drop-sub" id="drop-sub">or <span>click to browse</span> — Excel (.xlsx), CSV or PDF accepted</div>
-        </div>
-        <div id="file-chosen" style="display:none; margin-top:12px; font-size:0.82rem; color:var(--green); text-align:center; font-weight:600;"></div>
-        <div id="file-parsing-status" style="display:none; margin-top:12px; font-size:0.82rem; color:var(--amber); text-align:center; font-weight:600;">⏳ Reading file, please wait…</div>
-
-        <!-- Password field — shown only when file is loaded -->
-        <div id="password-section" style="display:none; margin-top:18px;">
-          <div style="background:rgba(79,158,255,0.07); border:1px solid rgba(79,158,255,0.2); border-radius:10px; padding:14px 16px;">
-            <div style="font-size:0.78rem; font-weight:700; color:var(--blue); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
-              🔒 File Password <span style="font-weight:400; color:var(--muted); font-size:0.72rem;">(SBI Net Banking PDFs & Excel files are password protected)</span>
-            </div>
-            <div style="position:relative;">
-              <input type="password" id="file-password" placeholder="Enter your statement password…"
-                style="padding-right:44px;"
-                onkeydown="if(event.key==='Enter' && !document.getElementById('btn-parse').disabled) parseCSV()"
-              />
-              <button onclick="togglePasswordVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--muted);padding:4px;" id="pwd-eye" title="Show/hide password">👁</button>
-            </div>
-            <div style="margin-top:8px; font-size:0.72rem; color:var(--muted); display:flex; align-items:flex-start; gap:6px;">
-              <span style="color:var(--green); flex-shrink:0;">🛡</span>
-              <span>Your password is used <strong style="color:var(--text);">only inside your browser</strong> to unlock the file. It is never sent to any server.</span>
-            </div>
-            <div style="margin-top:6px; font-size:0.72rem; color:var(--muted); display:flex; align-items:flex-start; gap:6px;">
-              <span style="flex-shrink:0;">💡</span>
-              <span>SBI default password is usually your <strong style="color:var(--text);">account number</strong> or <strong style="color:var(--text);">registered mobile number</strong>. Check the email that came with the statement.</span>
-            </div>
-          </div>
-        </div>
-        <div class="modal-actions" style="margin-top:18px;">
-          <button class="btn-modal-sec" onclick="goToStep(1)">← Back</button>
-          <button class="btn-modal-pri" id="btn-parse" onclick="parseCSV()" disabled>Parse Statement →</button>
-        </div>
-      </div>
-
-      <!-- STEP 3: Preview -->
-      <div id="import-step-3" style="display:none;">
-        <div id="detected-bank-badge" class="detected-badge" style="display:none;"></div>
-        <div class="import-summary">
-          <div class="summary-pill">
-            <div class="summary-pill-val" id="prev-total">0</div>
-            <div class="summary-pill-lbl">Transactions</div>
-          </div>
-          <div class="summary-pill">
-            <div class="summary-pill-val" style="color:var(--green);" id="prev-income">0</div>
-            <div class="summary-pill-lbl">Income</div>
-          </div>
-          <div class="summary-pill">
-            <div class="summary-pill-val" style="color:var(--red);" id="prev-expense">0</div>
-            <div class="summary-pill-lbl">Expenses</div>
-          </div>
-          <div class="summary-pill">
-            <div class="summary-pill-val" style="color:var(--amber);" id="prev-skipped">0</div>
-            <div class="summary-pill-lbl">Skipped</div>
-          </div>
-        </div>
-        <div class="preview-wrap">
-          <div class="preview-scroll">
-            <table class="preview-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Description</th>
-                  <th>Type</th>
-                  <th>Amount</th>
-                  <th>Category</th>
-                </tr>
-              </thead>
-              <tbody id="preview-tbody"></tbody>
-            </table>
-          </div>
-        </div>
-        <div id="import-error" style="display:none; background:rgba(255,94,126,0.1); border:1px solid rgba(255,94,126,0.3); border-radius:8px; padding:12px 16px; font-size:0.82rem; color:#ff9eb4; margin-bottom:14px;"></div>
-        <div class="modal-actions">
-          <button class="btn-modal-sec" onclick="goToStep(2)">← Re-upload</button>
-          <button class="btn-modal-pri" id="btn-confirm-import" onclick="confirmImport()">✅ Import All Transactions</button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- ── PROFILE MODAL ── -->
-<div class="profile-overlay" id="profile-overlay" onclick="handleProfileOverlayClick(event)">
-  <div class="profile-modal" id="profile-modal">
-
-    <!-- Banner + avatar -->
-    <div class="profile-banner">
-      <div class="profile-banner-inner"></div>
-      <div class="profile-avatar-wrap">
-        <div class="profile-avatar-big" id="profile-avatar-big" title="Change photo">
-          <span id="profile-avatar-initials">?</span>
-          <img id="profile-avatar-img" src="" alt="" style="display:none"/>
-          <div class="profile-avatar-edit">📷 Change</div>
-          <input type="file" class="profile-avatar-input" id="profile-avatar-file" accept="image/*" onchange="handleAvatarChange(event)"/>
-        </div>
-      </div>
-    </div>
-
-    <div class="profile-header-row">
-      <div style="padding-left:100px;">
-        <div style="font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;color:var(--text)" id="profile-display-title">—</div>
-        <div style="font-size:.8rem;color:var(--muted);margin-top:2px" id="profile-email-title">—</div>
-      </div>
-      <button class="profile-close-btn" onclick="closeProfile()">✕</button>
-    </div>
-
-    <div class="profile-body">
-
-      <!-- Account stats -->
-      <div class="profile-stats" id="profile-stats">
-        <div class="profile-stat">
-          <div class="profile-stat-val" id="pstat-txn">0</div>
-          <div class="profile-stat-lbl">Transactions</div>
-        </div>
-        <div class="profile-stat">
-          <div class="profile-stat-val" style="color:var(--green)" id="pstat-income">—</div>
-          <div class="profile-stat-lbl">Total Income</div>
-        </div>
-        <div class="profile-stat">
-          <div class="profile-stat-val" style="color:var(--red)" id="pstat-expense">—</div>
-          <div class="profile-stat-lbl">Total Expenses</div>
-        </div>
-        <div class="profile-stat">
-          <div class="profile-stat-val" style="color:var(--blue)" id="pstat-since">—</div>
-          <div class="profile-stat-lbl">Member Since</div>
-        </div>
-      </div>
-
-      <!-- ── Personal Info ── -->
-      <div class="profile-section">
-        <div class="profile-section-title">👤 Personal Info</div>
-        <div id="profile-info-msg" class="profile-msg"></div>
-        <div class="profile-field-row">
-          <div class="profile-field">
-            <label>Display Name</label>
-            <input type="text" id="profile-name" placeholder="Your name" maxlength="40"/>
-          </div>
-          <div class="profile-field">
-            <label>Email Address</label>
-            <input type="email" id="profile-email" disabled/>
-          </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:4px;">
-          <button class="btn-profile-save" id="btn-save-name" onclick="saveDisplayName()">Save Name</button>
-        </div>
-      </div>
-
-      <!-- ── Change Password ── -->
-      <div class="profile-section">
-        <div class="profile-section-title">🔒 Change Password</div>
-        <div id="profile-pass-msg" class="profile-msg"></div>
-        <div id="google-provider-note" style="display:none;background:rgba(79,158,255,.07);border:1px solid rgba(79,158,255,.18);border-radius:8px;padding:10px 14px;font-size:.8rem;color:var(--muted);margin-bottom:12px;">
-          ℹ️ Your account uses Google Sign-In — password change is not available.
-        </div>
-        <div id="password-change-form">
-          <div class="profile-field">
-            <label>Current Password</label>
-            <input type="password" id="profile-cur-pass" placeholder="Current password"/>
-          </div>
-          <div class="profile-field-row">
-            <div class="profile-field">
-              <label>New Password</label>
-              <input type="password" id="profile-new-pass" placeholder="Min 6 characters"/>
-            </div>
-            <div class="profile-field">
-              <label>Confirm New Password</label>
-              <input type="password" id="profile-new-pass2" placeholder="Repeat new password"/>
-            </div>
-          </div>
-          <button class="btn-profile-save" id="btn-save-pass" onclick="changePassword()">Update Password</button>
-        </div>
-      </div>
-
-      <!-- ── Preferences ── -->
-      <div class="profile-section">
-        <div class="profile-section-title">⚙️ Preferences</div>
-        <div class="profile-field-row">
-          <div class="profile-field">
-            <label>Default Currency</label>
-            <input type="text" id="profile-cur-display" disabled style="cursor:default"/>
-          </div>
-          <div class="profile-field">
-            <label>Total Data Points</label>
-            <input type="text" id="profile-data-size" disabled style="cursor:default"/>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── Danger Zone ── -->
-      <div class="danger-zone">
-        <div class="danger-zone-title">⚠️ Danger Zone</div>
-        <div class="danger-zone-desc">
-          Deleting your account is <strong style="color:var(--text)">permanent and irreversible</strong>. All your transactions, settings, and data stored in FinanceTracker will be erased immediately. This cannot be undone.
-        </div>
-        <button class="btn-danger" onclick="openReauth('delete')">🗑 Delete My Account</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<!-- ── RE-AUTH MODAL (used for password change + account deletion) ── -->
-<div class="reauth-overlay" id="reauth-overlay" onclick="handleReauthOverlayClick(event)">
-  <div class="reauth-modal">
-    <div class="reauth-title" id="reauth-title">Confirm Your Identity</div>
-    <div class="reauth-sub" id="reauth-sub">For security, please enter your current password to continue.</div>
-    <div class="reauth-msg" id="reauth-msg"></div>
-    <div class="reauth-field">
-      <label>Password</label>
-      <input type="password" id="reauth-pass" placeholder="Your current password" onkeydown="if(event.key==='Enter')submitReauth()"/>
-    </div>
-    <div class="reauth-actions">
-      <button class="btn-profile-sec" onclick="closeReauth()" style="flex:1">Cancel</button>
-      <button class="btn-danger" onclick="submitReauth()" style="flex:2" id="btn-reauth-submit">Confirm →</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
 
 <script>
   // ── CURRENCIES (180+) ──
@@ -3428,6 +3163,8 @@
   }
   const debouncedRenderAll  = debounce(() => renderAll(),  180);
   const debouncedRenderList = debounce(() => renderList(),  120);
+  window.debouncedRenderAll  = debouncedRenderAll;
+  window.debouncedRenderList = debouncedRenderList;
 
   // ════════════════════════════════════════
   // PERF 3 — PAGINATED renderList
@@ -3472,11 +3209,15 @@
     const opts  = Object.entries(catMeta).map(([k, v]) =>
       `<option value="${k}"${t.cat === k ? ' selected' : ''}>${v.icon} ${v.label}</option>`
     ).join('');
-    return `<div class="tx-item">
+    const isImport = t.source === 'import';
+    const actionBtn = isImport
+      ? `<div class="btn-imported" title="From bank statement — category can be changed">🔒</div>`
+      : `<button class="btn-delete" onclick="deleteTransaction(${t.id})" title="Delete">✕</button>`;
+    return `<div class="tx-item${isImport ? ' tx-imported' : ''}">
       <div class="tx-left">
         <div class="tx-icon cat-icon-${t.cat}">${meta.icon}</div>
         <div class="tx-info">
-          <div class="tx-name">${escHtml(t.desc)}</div>
+          <div class="tx-name">${escHtml(t.desc)}${isImport ? '<span class="tx-bank-badge">🏦 Bank</span>' : ''}</div>
           <div class="tx-meta">
             <span class="tx-date">${dateF}</span>
             <span class="cat-badge cat-${t.cat}">${meta.label}</span>
@@ -3486,7 +3227,7 @@
       <div class="tx-right">
         <select class="cat-select-box" onchange="changeCat(${t.id},this)" title="Change category">${opts}</select>
         <div class="tx-amount ${t.type}">${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</div>
-        <button class="btn-delete" onclick="deleteTransaction(${t.id})" title="Delete">✕</button>
+        ${actionBtn}
       </div>
     </div>`;
   }
@@ -3778,14 +3519,15 @@
     const date   = document.getElementById('tx-date').value;
 
     if (!desc)           return toast('⚠️ Please enter a description');
-    if (!amount || amount <= 0) return toast('⚠️ Please enter a valid amount');
+    if (!amount || isNaN(amount) || amount <= 0) return toast('⚠️ Please enter a valid amount');
     if (!cat)            return toast('⚠️ Please select a category');
     if (!date)           return toast('⚠️ Please pick a date');
 
     const tx = {
       id: Date.now(),
       type: selectedType,
-      desc, amount, cat, date
+      desc, amount, cat, date,
+      source: 'manual'
     };
 
     transactions.unshift(tx);
@@ -3808,13 +3550,38 @@
   }
 
   // ── DELETE ALL ──
+  // ── Modal helpers: lock body scroll so modal always appears centred on screen ──
+  function openModal(id) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    // Pin overlay to current visible viewport using scrollY so it doesn't shift
+    const sy = window.scrollY;
+    overlay._scrollY = sy;
+    overlay.style.position = 'fixed';
+    overlay.style.top    = '0px';
+    overlay.style.left   = '0px';
+    overlay.style.right  = '0px';
+    overlay.style.bottom = '0px';
+    document.body.style.overflow = 'hidden';
+    overlay.classList.add('active');
+  }
+  function closeModal(id) {
+    const overlay = document.getElementById(id);
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    overlay.style.top = overlay.style.left = overlay.style.right = overlay.style.bottom = '';
+    document.body.style.overflow = '';
+    window.scrollTo(0, overlay._scrollY || 0);
+  }
+
   function confirmDeleteAll() {
     if (!transactions.length) return toast('⚠️ No transactions to delete');
-    document.getElementById('delete-count').textContent = `${transactions.length} transaction${transactions.length !== 1 ? 's' : ''}`;
-    document.getElementById('delete-overlay').classList.add('active');
+    const count = transactions.length;
+    document.getElementById('delete-count').textContent = `${count} transaction${count !== 1 ? 's' : ''}`;
+    openModal('delete-overlay');
   }
   function closeDeleteModal() {
-    document.getElementById('delete-overlay').classList.remove('active');
+    closeModal('delete-overlay');
   }
   function deleteAll() {
     const count = transactions.length;
@@ -3835,6 +3602,12 @@
     renderStats();renderChart();
   }
   function deleteTransaction(id) {
+    const tx = transactions.find(t => t.id === id);
+    // Block deletion of bank-imported transactions
+    if (tx && tx.source === 'import') {
+      toast('🔒 Bank imports cannot be deleted — you can only change the category');
+      return;
+    }
     // FIX 4: capture btn/item references immediately so rapid successive deletes
     // each hold their own closure over the correct DOM node and transaction id.
     const btn  = document.querySelector(`.btn-delete[onclick*="deleteTransaction(${id})"]`);
@@ -3854,9 +3627,33 @@
     }
   }
 
+  // ── Migrate legacy transactions that have no source field ──
+  // Any transaction saved before this feature existed is treated as 'manual'
+  // so existing users don't lose their delete buttons.
+  (function migrateTransactionSource() {
+    let changed = false;
+    transactions.forEach(t => {
+      if (!t.source) { t.source = 'manual'; changed = true; }
+    });
+    if (changed) {
+      try { localStorage.setItem('ftTransactions', JSON.stringify(transactions)); } catch(e) {}
+    }
+  })();
+
   // FIX 3: save() has the offline guard built-in — no fragile monkey-patch.
   // Renders immediately, persists to localStorage when offline, syncs to Firebase when online.
-  async function save(){
+  // ── Migrate legacy transactions that have no source field ──
+  // Transactions saved before this feature existed are treated as 'manual'
+  // so existing users keep their delete buttons.
+  (function migrateTransactionSource() {
+    let changed = false;
+    transactions.forEach(t => { if (!t.source) { t.source = 'manual'; changed = true; } });
+    if (changed) {
+      try { localStorage.setItem('ftTransactions', JSON.stringify(transactions)); } catch(e) {}
+    }
+  })();
+
+    async function save(){
     renderAll();
     // Offline guard — persist locally and mark dirty for later sync
     if (!navigator.onLine) {
@@ -3891,7 +3688,7 @@
     renderStats();
     renderList();
     renderChart();
-    renderDonutCharts();
+    renderPieChart();
   }
 
   // ── STATS ──
@@ -4064,116 +3861,292 @@
     });
   }
 
-  // ── CATEGORY BREAKDOWN DOUGHNUT CHARTS ──
-  let _donutExpense = null, _donutIncome = null;
+  // == SPENDING BREAKDOWN PIE CHART ==
 
-  const DONUT_COLORS = {
-    salary:     '#00e5a0',
-    freelance:  '#22d3ee',
-    investment: '#f472b6',
-    food:       '#fb923c',
-    transport:  '#4f9eff',
-    housing:    '#a78bfa',
-    health:     '#ff5e7e',
-    shopping:   '#ffb830',
-    atm:        '#fbbf24',
-    cash:       '#84cc16',
-    other:      '#7a8aa0',
+  let pieChart = null;
+  let _pieMode = 'expense';
+
+  // ── Icon-matched colour system ──
+  // Every palette is tuned to match the visual colour of its category icon:
+  //   💼 Salary     → warm leather brown / tan / gold
+  //   💻 Freelance  → cool steel blue / silver / electric
+  //   📈 Investment → rich emerald / money green / lime
+  //   🍔 Food       → golden bun / tomato red / mustard
+  //   🚗 Transport  → metallic blue / silver / slate
+  //   🏠 Housing    → terracotta roof / warm brick / sandstone
+  //   ❤️  Health     → vivid red / deep rose / soft blush
+  //   🛍 Shopping   → bright coral pink / magenta / violet
+  //   🏧 ATM        → electric teal-blue / steel / cyan
+  //   💵 Cash       → dollar green / neon lime / emerald
+  //   🔖 Other      → warm amber / orange / sunset
+
+  const CAT_PALETTE = {
+    // 💼 Salary — rich leather brown + warm tan. Distinct warm-brown identity.
+    salary:     { from:'#D4A055', mid:'#A0522D', to:'#5C2E00', glow:'#E8B870' },
+
+    // 💻 Freelance — electric indigo-blue laptop screen glow. Cool blue-violet.
+    freelance:  { from:'#818CF8', mid:'#6366F1', to:'#1E1B4B', glow:'#A5B4FC' },
+
+    // 📈 Investment — crisp money emerald. Vivid and unambiguously green.
+    investment: { from:'#4ADE80', mid:'#16A34A', to:'#14532D', glow:'#86EFAC' },
+
+    // 🍔 Food — pure ketchup-red + mustard. Red-orange, NOT amber/yellow.
+    food:       { from:'#FF6B35', mid:'#E84C0B', to:'#7C2D12', glow:'#FF8C60' },
+
+    // 🚗 Transport — icy platinum-blue, like a silver car. Distinct from indigo.
+    transport:  { from:'#BAE6FD', mid:'#38BDF8', to:'#075985', glow:'#E0F2FE' },
+
+    // 🏠 Housing — warm brick terracotta. Orange-red, deeper than food.
+    housing:    { from:'#FCA5A5', mid:'#EF4444', to:'#991B1B', glow:'#FECACA' },
+
+    // ❤️ Health — pure deep crimson rose. Clear red identity.
+    health:     { from:'#FB7185', mid:'#F43F5E', to:'#881337', glow:'#FDA4AF' },
+
+    // 🛍 Shopping — vivid hot magenta-pink. Unmistakably pink/purple.
+    shopping:   { from:'#F0ABFC', mid:'#D946EF', to:'#701A75', glow:'#F5D0FE' },
+
+    // 🏧 ATM — electric neon cyan-teal. Machine-blue, very distinct.
+    atm:        { from:'#67E8F9', mid:'#06B6D4', to:'#155E75', glow:'#A5F3FC' },
+
+    // 💵 Cash — neon lime-green dollar bill. Bright yellow-green.
+    cash:       { from:'#BEF264', mid:'#84CC16', to:'#365314', glow:'#D9F99D' },
+
+    // 🔖 Other — warm golden yellow bookmark. Pure yellow, not amber-orange.
+    other:      { from:'#FEF08A', mid:'#EAB308', to:'#713F12', glow:'#FEF9C3' },
   };
 
-  function renderDonutCharts() {
+  const FALLBACK_PALETTES = [
+    { from:'#C084FC', mid:'#A855F7', to:'#4C1D95', glow:'#E879F9' },   // vivid purple
+    { from:'#FB923C', mid:'#EA580C', to:'#7C2D12', glow:'#FDBA74' },   // deep orange
+    { from:'#2DD4BF', mid:'#14B8A6', to:'#134E4A', glow:'#5EEAD4' },   // teal
+    { from:'#F472B6', mid:'#DB2777', to:'#831843', glow:'#F9A8D4' },   // deep pink
+    { from:'#A3E635', mid:'#65A30D', to:'#365314', glow:'#D9F99D' },   // lime
+    { from:'#38BDF8', mid:'#0284C7', to:'#0C4A6E', glow:'#7DD3FC' },   // sky
+    { from:'#FDE047', mid:'#CA8A04', to:'#713F12', glow:'#FEF08A' },   // yellow-gold
+    { from:'#6EE7B7', mid:'#059669', to:'#064E3B', glow:'#A7F3D0' },   // emerald
+  ];
+
+  // Radial gradient: bright vivid centre → rich saturated edge
+  function makePieGradient(ctx2d, palette, cx, cy, r) {
+    var g = ctx2d.createRadialGradient(cx, cy, r * 0.25, cx, cy, r);
+    g.addColorStop(0,    palette.from);         // bright vivid core
+    g.addColorStop(0.5,  palette.mid);          // rich mid-ring
+    g.addColorStop(1,    palette.to);           // deep saturated edge
+    return g;
+  }
+
+  // Peak brightness colour for legend dots & percentage text
+  const catColors = {
+    salary:'#E8B870',     // 💼 warm tan
+    freelance:'#A5B4FC',  // 💻 electric indigo
+    investment:'#86EFAC', // 📈 bright emerald
+    food:'#FF8C60',       // 🍔 ketchup-red orange
+    transport:'#E0F2FE',  // 🚗 icy platinum blue
+    housing:'#FECACA',    // 🏠 soft brick red
+    health:'#FDA4AF',     // ❤️  rose crimson
+    shopping:'#F5D0FE',   // 🛍 hot magenta
+    atm:'#A5F3FC',        // 🏧 neon cyan
+    cash:'#D9F99D',       // 💵 neon lime
+    other:'#FEF9C3'       // 🔖 pure yellow
+  };
+  const PIE_COLORS = [
+    '#E8B870','#A5B4FC','#86EFAC','#FF8C60','#E0F2FE',
+    '#FECACA','#FDA4AF','#F5D0FE','#A5F3FC','#D9F99D','#FEF9C3',
+    '#E879F9','#FDBA74','#5EEAD4','#A3E635'
+  ];
+
+  function setPieMode(mode) {
+    _pieMode = mode;
+    var btnExp = document.getElementById('pie-toggle-expense');
+    var btnInc = document.getElementById('pie-toggle-income');
+    var active   = 'padding:6px 20px;border-radius:20px;border:none;background:linear-gradient(135deg,#FF4D6D,#FF9800);color:#fff;font-size:.75rem;font-weight:800;font-family:\'Outfit\',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 2px 14px rgba(255,77,109,.5),0 0 0 1px rgba(255,255,255,.08);';
+    var inactiveE = 'padding:6px 20px;border-radius:20px;border:none;background:transparent;color:rgba(160,185,220,.65);font-size:.75rem;font-weight:600;font-family:\'Outfit\',sans-serif;cursor:pointer;transition:all .2s;';
+    var activeInc = 'padding:6px 20px;border-radius:20px;border:none;background:linear-gradient(135deg,#76FF03,#00BCD4);color:#0a1520;font-size:.75rem;font-weight:800;font-family:\'Outfit\',sans-serif;cursor:pointer;transition:all .2s;box-shadow:0 2px 14px rgba(118,255,3,.45),0 0 0 1px rgba(255,255,255,.08);';
+    var inactive = inactiveE;
+    if (btnExp) btnExp.style.cssText = mode === 'expense' ? active   : inactiveE;
+    if (btnInc) btnInc.style.cssText = mode === 'income'  ? activeInc : inactive;
+    renderPieChart();
+  }
+
+  function renderPieChart() {
     if (typeof Chart === 'undefined') return;
-    const { from: drF, to: drT } = getDateRange();
+    const emptyEl = document.getElementById('pie-empty');
+    const canvas  = document.getElementById('pieChart');
+    const wrap    = document.getElementById('pie-canvas-wrap');
+    if (!canvas || !wrap) return;
 
-    ['expense', 'income'].forEach(type => {
-      const txs = transactions.filter(t =>
-        t.type === type &&
-        (!drF || t.date >= drF) &&
-        (!drT || t.date <= drT) &&
-        (type === 'income' ? t.cat !== 'cash' : true)
-      );
+    // Respect active date range
+    const from = document.getElementById('date-from') ? document.getElementById('date-from').value : '';
+    const to   = document.getElementById('date-to')   ? document.getElementById('date-to').value   : '';
 
-      // Sum by category
-      const totals = {};
-      txs.forEach(t => { totals[t.cat] = (totals[t.cat] || 0) + t.amount; });
-      const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-      const grand  = sorted.reduce((s, [, v]) => s + v, 0);
+    const filtered = transactions.filter(t => {
+      if (t.type !== _pieMode) return false;
+      if (_pieMode === 'income' && t.cat === 'cash') return false;
+      if (from && t.date < from) return false;
+      if (to   && t.date > to)   return false;
+      return true;
+    });
 
-      const canvasId  = type + 'Donut';
-      const legendId  = type + '-donut-legend';
-      const totalId   = type + '-donut-total';
-      const canvas    = document.getElementById(canvasId);
-      const legend    = document.getElementById(legendId);
-      const totalEl   = document.getElementById(totalId);
-      const donutRef  = type === 'expense' ? '_donutExpense' : '_donutIncome';
+    // Aggregate by category
+    const totals = {};
+    filtered.forEach(t => { totals[t.cat] = (totals[t.cat] || 0) + t.amount; });
+    const entries = Object.entries(totals).sort((a,b) => b[1]-a[1]);
+    const grandTotal = entries.reduce((s,[,v]) => s+v, 0);
 
-      if (totalEl) totalEl.textContent = grand > 0 ? fmt(grand) : '—';
+    if (!entries.length) {
+      emptyEl.style.display = '';
+      wrap.style.display = 'none';
+      document.getElementById('pie-legend').innerHTML = '';
+      document.getElementById('pie-center-value').textContent = '';
+      document.getElementById('pie-center-cat').textContent = '';
+      if (pieChart) { pieChart.destroy(); pieChart = null; }
+      return;
+    }
+    emptyEl.style.display = 'none';
+    wrap.style.display = '';
 
-      // Destroy old chart instance before redrawing
-      if (window[donutRef]) { window[donutRef].destroy(); window[donutRef] = null; }
+    const sym    = activeCurrency.symbol;
+    const labels = entries.map(([k]) => (catMeta[k]||{label:k}).label);
+    const icons  = entries.map(([k]) => (catMeta[k]||{icon:''}).icon);
+    const values = entries.map(([,v]) => v);
+    const colors     = entries.map(([k],i) => catColors[k] || PIE_COLORS[i % PIE_COLORS.length]);
+    const glowColors = entries.map(([k],i) => (CAT_PALETTE[k] || FALLBACK_PALETTES[i % FALLBACK_PALETTES.length]).glow);
 
-      if (!canvas) return;
+    // Build per-segment canvas gradients
+    var cx = 150, cy = 150, r = 145; // canvas 300x300
+    var rawCtx = canvas.getContext('2d');
+    var gradients = entries.map(function([k], i) {
+      var pal = CAT_PALETTE[k] || FALLBACK_PALETTES[i % FALLBACK_PALETTES.length];
+      return makePieGradient(rawCtx, pal, cx, cy, r);
+    });
 
-      if (!sorted.length) {
-        if (legend) legend.innerHTML = '<div style="color:var(--muted);font-size:0.82rem;padding:8px 0;">No data yet</div>';
-        // Draw empty grey ring
-        window[donutRef] = new Chart(canvas.getContext('2d'), {
-          type: 'doughnut',
-          data: { datasets: [{ data: [1], backgroundColor: ['rgba(255,255,255,0.06)'], borderWidth: 0 }] },
-          options: { cutout: '68%', responsive: false, plugins: { legend: { display: false }, tooltip: { enabled: false } } }
-        });
-        return;
-      }
+    // Show full figures with commas up to crores (10,000,000), abbreviate only above
+    const fmtFull = function(v) {
+      if (v >= 10000000) return sym + (v/10000000).toFixed(2) + 'Cr';
+      return sym + v.toLocaleString('en-IN', {maximumFractionDigits: 0});
+    };
+    const fmtVal = fmtFull;
 
-      const labels = sorted.map(([k])    => catMeta[k]?.label || k);
-      const data   = sorted.map(([, v])  => v);
-      const colors = sorted.map(([k])    => DONUT_COLORS[k] || '#7a8aa0');
+    document.getElementById('pie-center-value').textContent = fmtFull(grandTotal);
+    document.getElementById('pie-center-value').style.color = 'var(--text)';
+    document.getElementById('pie-center-cat').textContent   = _pieMode === 'expense' ? 'Total Spent' : 'Total Earned';
 
-      window[donutRef] = new Chart(canvas.getContext('2d'), {
-        type: 'doughnut',
-        data: {
-          labels,
-          datasets: [{
-            data,
-            backgroundColor: colors,
-            borderWidth: 2,
-            borderColor: '#131929',
-            hoverBorderColor: '#131929',
-            hoverOffset: 8,
-          }]
-        },
-        options: {
-          cutout: '68%',
-          responsive: false,
-          animation: { animateRotate: true, duration: 700 },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#1a2236',
-              borderColor: 'rgba(255,255,255,0.1)',
-              borderWidth: 1,
-              titleColor: '#e8edf5',
-              bodyColor: '#7a8aa0',
-              padding: 10,
-              callbacks: {
-                label: ctx => ` ${fmt(ctx.parsed)} — ${((ctx.parsed / grand) * 100).toFixed(1)}%`
+    if (pieChart) pieChart.destroy();
+
+    const ctx = canvas.getContext('2d');
+    pieChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: gradients,
+          borderColor: '#08111f',
+          borderWidth: 3,
+          hoverBorderColor: glowColors,
+          hoverBorderWidth: 2,
+          hoverOffset: 26,
+          spacing: 3,
+        }]
+      },
+      options: {
+        responsive: false,
+        cutout: '68%',
+        animation: { animateRotate: true, animateScale: true, duration: 900, easing: 'easeOutQuart' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(6,10,20,0.97)',
+            borderColor: function(ctx) {
+              var i = ctx.tooltip.dataPoints && ctx.tooltip.dataPoints[0] ? ctx.tooltip.dataPoints[0].dataIndex : 0;
+              return glowColors[i] || 'rgba(255,255,255,0.2)';
+            },
+            borderWidth: 1,
+            titleColor: '#ffffff',
+            bodyColor: '#c8d4e8',
+            padding: 14,
+            cornerRadius: 12,
+            boxPadding: 6,
+            titleFont: { size: 13, weight: '700' },
+            bodyFont:  { size: 12 },
+            callbacks: {
+              title: function(items) {
+                var i = items[0].dataIndex;
+                return icons[i] + '  ' + labels[i];
+              },
+              label: function(ctx) {
+                var pct = ((ctx.parsed / grandTotal)*100).toFixed(1);
+                return '  ' + sym + ctx.parsed.toLocaleString('en-IN',{maximumFractionDigits:0}) + '   ·   ' + pct + '% of total';
               }
             }
           }
+        },
+        onHover: function(event, elements) {
+          var el  = document.getElementById('pie-center-value');
+          var cat = document.getElementById('pie-center-cat');
+          if (elements.length) {
+            var i = elements[0].index;
+            el.textContent  = fmtFull(values[i]);
+            cat.textContent = icons[i] + ' ' + labels[i];
+            el.style.color  = glowColors[i];
+            el.style.textShadow = '0 0 20px ' + glowColors[i] + 'CC, 0 0 40px ' + glowColors[i] + '55';
+            el.style.transform = 'scale(1.06)';
+          } else {
+            el.textContent  = fmtFull(grandTotal);
+            cat.textContent = _pieMode === 'expense' ? 'Total Spent' : 'Total Earned';
+            el.style.color  = 'var(--text)';
+            el.style.textShadow = 'none';
+            el.style.transform = 'scale(1)';
+          }
         }
-      });
-
-      // Build legend
-      if (legend) {
-        legend.innerHTML = sorted.map(([k, v]) => `
-          <div class="bl-item">
-            <div class="bl-dot" style="background:${DONUT_COLORS[k] || '#7a8aa0'}"></div>
-            <span class="bl-name">${catMeta[k]?.icon || ''} ${catMeta[k]?.label || k}</span>
-            <span class="bl-pct">${((v / grand) * 100).toFixed(0)}%</span>
-          </div>`).join('');
       }
     });
+
+    // Custom legend — vivid neon style
+    const legendEl = document.getElementById('pie-legend');
+    var rankClr  = ['#FFD700','#C0C8D8','#CD8B3A'];
+    var rankEmoj = ['🥇','🥈','🥉'];
+    legendEl.innerHTML = entries.map(function([k,v], i) {
+      var pct   = ((v/grandTotal)*100).toFixed(1);
+      var meta  = catMeta[k] || {icon:'', label:k};
+      var color = colors[i];
+      var glow  = glowColors[i];
+      var disp  = v >= 10000000 ? sym + (v/10000000).toFixed(2)+'Cr' : sym + v.toLocaleString('en-IN',{maximumFractionDigits:0});
+      var pal   = CAT_PALETTE[k] || FALLBACK_PALETTES[i % FALLBACK_PALETTES.length];
+      var mid   = pal.mid || pal.from;
+      var rankLabel = i < 3
+        ? '<span style="font-size:.72rem;width:18px;text-align:center;flex-shrink:0;">' + rankEmoj[i] + '</span>'
+        : '<span style="font-size:.62rem;font-weight:700;color:rgba(120,140,170,.6);width:18px;text-align:center;flex-shrink:0;">' + (i+1) + '</span>';
+      return '<div class="pie-leg-row">'
+        + rankLabel
+        + '<div style="width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 38% 38%,' + pal.from + ',' + pal.to + ');box-shadow:0 0 7px ' + glow + ',0 0 14px ' + glow + '55;justify-self:center;"></div>'
+        + '<span style="font-size:.79rem;font-weight:600;color:#dce8f8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + meta.icon + ' ' + meta.label + '</span>'
+        + '<div class="pie-leg-bar">'
+        +   '<div class="pie-leg-fill" style="width:' + pct + '%;background:linear-gradient(90deg,' + pal.from + ',' + mid + ',' + pal.to + ');box-shadow:0 0 5px ' + glow + '90;"></div>'
+        + '</div>'
+        + '<span class="pie-leg-pct" style="font-size:.8rem;font-weight:800;color:' + color + ';text-shadow:0 0 10px ' + glow + 'BB;">' + pct + '%</span>'
+        + '<span class="pie-leg-amt" style="font-size:.71rem;color:rgba(155,175,205,.7);">' + disp + '</span>'
+        + '</div>';
+    }).join('');
+
+    // Populate right stats panel
+    var topMeta = catMeta[entries[0][0]] || {icon:'', label: entries[0][0]};
+    var topPct  = ((entries[0][1]/grandTotal)*100).toFixed(1);
+    var avgRaw  = grandTotal / entries.length;
+    var avg     = avgRaw >= 10000000 ? sym + (avgRaw/10000000).toFixed(2)+'Cr' : sym + avgRaw.toLocaleString('en-IN',{maximumFractionDigits:0});
+    var topEl   = document.getElementById('pie-top-cat');
+    var pctEl   = document.getElementById('pie-top-pct');
+    var cntEl   = document.getElementById('pie-cat-count');
+    var avgEl   = document.getElementById('pie-avg');
+    var subEl   = document.getElementById('pie-subtitle');
+    if (topEl)  topEl.textContent  = topMeta.icon + ' ' + topMeta.label;
+    if (pctEl)  pctEl.textContent  = topPct + '% of total';
+    if (cntEl)  cntEl.textContent  = entries.length;
+    if (avgEl)  avgEl.textContent  = avg;
+    if (subEl)  subEl.textContent  = entries.length + ' categories · ' + (_pieMode === 'expense' ? 'spending' : 'income') + ' view';
   }
+
+  // ── CATEGORY BREAKDOWN DOUGHNUT CHARTS ──
 
   function getLast6Months() {
     const months = [];
@@ -4490,7 +4463,7 @@
   // picks a file — import modal is the only place they're needed.
   async function openImportModal() {
     try { await Promise.all([loadXLSX(), loadPDF()]); } catch(e) {}
-    document.getElementById('import-overlay').classList.add('active');
+    openModal('import-overlay');
     goToStep(1);
     parsedImportRows = [];
     rawFileText = '';
@@ -4506,7 +4479,7 @@
     document.getElementById('account-info-card').style.display = 'none';
   }
   function closeImportModal() {
-    document.getElementById('import-overlay').classList.remove('active');
+    closeModal('import-overlay');
   }
   function handleOverlayClick(e) {
     if (e.target === document.getElementById('import-overlay')) closeImportModal();
@@ -4613,23 +4586,23 @@
         status.style.display = 'none';
         fc.style.display = 'block';
         fc.style.color = 'var(--green)';
-        fc.innerHTML = `✅ "${file.name}" ready (${(file.size/1024).toFixed(1)} KB)`;
+        fc.innerHTML = `✅ "${escHtml(file.name)}" ready (${(file.size/1024).toFixed(1)} KB)`;
         document.getElementById('password-section').style.display = 'block';
         document.getElementById('btn-parse').disabled = false;
         setTimeout(() => document.getElementById('file-password').focus(), 80);
       };
-      reader.onerror = () => showStepTwoError(`❌ Could not read "${file.name}". The file may be corrupted.`);
+      reader.onerror = () => showStepTwoError(`❌ Could not read "${escHtml(file.name)}". The file may be corrupted.`);
       reader.readAsArrayBuffer(file);
     } else if (ext === 'xlsx' || ext === 'xls') {
       const reader = new FileReader();
       reader.onload = ev => {
         currentFileBuffer = ev.target.result;
         fc.style.display = 'block';
-        fc.innerHTML = `✅ "${file.name}" loaded as Excel (${(file.size/1024).toFixed(1)} KB)`;
+        fc.innerHTML = `✅ "${escHtml(file.name)}" loaded as Excel (${(file.size/1024).toFixed(1)} KB)`;
         document.getElementById('password-section').style.display = 'block';
         document.getElementById('btn-parse').disabled = false;
       };
-      reader.onerror = () => showStepTwoError(`❌ Could not read "${file.name}". The file may be corrupted.`);
+      reader.onerror = () => showStepTwoError(`❌ Could not read "${escHtml(file.name)}". The file may be corrupted.`);
       reader.readAsArrayBuffer(file);
     } else {
       currentFileBuffer = null;
@@ -4637,11 +4610,11 @@
       reader.onload = ev => {
         rawFileText = ev.target.result;
         fc.style.display = 'block';
-        fc.innerHTML = `✅ "${file.name}" loaded (${(file.size/1024).toFixed(1)} KB)`;
+        fc.innerHTML = `✅ "${escHtml(file.name)}" loaded (${(file.size/1024).toFixed(1)} KB)`;
         document.getElementById('password-section').style.display = 'none';
         document.getElementById('btn-parse').disabled = false;
       };
-      reader.onerror = () => showStepTwoError(`❌ Could not read "${file.name}". The file may be corrupted.`);
+      reader.onerror = () => showStepTwoError(`❌ Could not read "${escHtml(file.name)}". The file may be corrupted.`);
       reader.readAsText(file);
     }
   }
@@ -4864,11 +4837,6 @@
         const rows = await extractRawPDFItems(currentFileBuffer, password);
         status.style.display = 'none';
 
-        console.log('=== ROWS DEBUG ===');
-        rows.slice(0, 80).forEach((row, i) => {
-          const txt = row.map(r => r.text).join(' | ');
-          console.log(`R${i}:`, txt);
-        });
         parsedImportRows = parseSBITokenStream(rows);
         const bankName = (selectedBank !== 'auto' && selectedBank !== 'other')
           ? (BANK_SCHEMAS[selectedBank]?.name || 'Bank')
@@ -5052,6 +5020,7 @@
       amount: r.amount,
       cat: r.cat,
       date: r.date,
+      source: 'import'       // bank statement — cannot be deleted, only recategorised
     }));
     // Build dedup set from in-memory (plaintext) transactions
     const existing = new Set(
@@ -5084,7 +5053,12 @@
     updateDateSummary(from,to);
     renderAll();
   }
-  function onDateChange(){
+  function onDateChange(){renderPieChart_after_orig();}
+  function renderPieChart_after_orig(){
+    onDateChange_real();
+    renderPieChart();
+  }
+  function onDateChange_real(){
     ['30d','3m','6m','1y','all'].forEach(p=>{const b=document.getElementById('preset-'+p);if(b)b.classList.remove('active');});
     const from=document.getElementById('date-from').value, to=document.getElementById('date-to').value;
     updateDateSummary(from,to);
@@ -5304,10 +5278,12 @@
     document.getElementById('profile-new-pass2').value = '';
 
     document.getElementById('profile-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
   }
 
   function closeProfile() {
     document.getElementById('profile-overlay').classList.remove('active');
+    document.body.style.overflow = '';
   }
 
   function handleProfileOverlayClick(e) {
@@ -5419,11 +5395,13 @@
     document.getElementById('reauth-pass').value = prefillPass || '';
     clearReauthMsg();
     document.getElementById('reauth-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
     setTimeout(() => document.getElementById('reauth-pass').focus(), 80);
   }
 
   function closeReauth() {
     document.getElementById('reauth-overlay').classList.remove('active');
+    document.body.style.overflow = '';
     reauthAction = null;
     pendingNewPassword = null;
   }
@@ -5661,7 +5639,7 @@
     }, 400);
 
     // ── Re-animate on a loop so the preview stays lively ──
-    setInterval(() => {
+    window._authAnimInterval = setInterval(() => {
       document.querySelectorAll('.auth-bar').forEach(b => {
         b.style.animation = 'none';
         b.offsetHeight;
@@ -5689,6 +5667,7 @@
       currentUser=user;userDbRef=fbDb.ref('users/'+user.uid);
       document.getElementById('auth-screen').classList.add('hidden');
       document.getElementById('main-app').style.display='';
+      if (window._authAnimInterval) { clearInterval(window._authAnimInterval); window._authAnimInterval = null; }
       if (typeof window.showInstallBtn === 'function') window.showInstallBtn();
       const pill=document.getElementById('user-pill'),avatar=document.getElementById('user-avatar');
       if(user.photoURL){avatar.innerHTML=`<img src="${user.photoURL}" alt="">`;}else{avatar.textContent=(user.displayName||user.email||'?').slice(0,2).toUpperCase();}
@@ -5717,9 +5696,6 @@
       currentUser=null;userDbRef=null;transactions=[];
       _encKey=null; // FIX 2: purge derived key on sign-out
       _statsBuilt=false; // UI POLISH: reset so skeletons re-show on next login
-      // Destroy donut chart instances so they redraw cleanly on next login
-      if(_donutExpense){_donutExpense.destroy();_donutExpense=null;}
-      if(_donutIncome) {_donutIncome.destroy(); _donutIncome=null;}
       document.getElementById('main-app').classList.remove('app-ready');
       // Restore stat card skeletons for next login
       const sg=document.getElementById('stats-grid');
@@ -5817,6 +5793,364 @@
     console.log('[PWA] App installed successfully');
   });
 </script>
+
+
+<!-- ── DELETE ALL CONFIRMATION MODAL ── -->
+<div class="modal-overlay" id="delete-overlay" onclick="if(event.target===this)closeDeleteModal()">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" style="background:linear-gradient(90deg,#ff5e7e,#fb923c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">🗑 Delete All Transactions</div>
+        <div class="modal-sub">This action cannot be undone</div>
+      </div>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:rgba(255,94,126,0.08);border:1px solid rgba(255,94,126,0.25);border-radius:10px;padding:16px;margin-bottom:20px;font-size:0.88rem;color:var(--muted);line-height:1.6;">
+        ⚠️ You are about to permanently delete <strong id="delete-count" style="color:var(--text);">all</strong> transactions — including bank imports. Your exported CSV files will not be affected.
+      </div>
+      <div class="modal-actions">
+        <button class="btn-modal-sec" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn-modal-pri" onclick="deleteAll()" style="background:linear-gradient(135deg,#ff5e7e,#fb923c);">🗑 Yes, Delete All</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── IMPORT MODAL ── -->
+<div class="modal-overlay" id="import-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="import-modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">🏦 Import Bank Statement</div>
+        <div class="modal-sub">Supports SBI Net Banking Excel (.xlsx) & PDF · Plus HDFC, ICICI, Axis & more</div>
+      </div>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Step indicators -->
+      <div class="steps">
+        <div class="step active" id="step-ind-1">
+          <div class="step-num">1</div>
+          <div class="step-label">Select Bank</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step-ind-2">
+          <div class="step-num">2</div>
+          <div class="step-label">Upload File</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step-ind-3">
+          <div class="step-num">3</div>
+          <div class="step-label">Preview & Import</div>
+        </div>
+      </div>
+
+      <!-- STEP 1: Bank Selection -->
+      <div id="import-step-1">
+        <div class="bank-grid">
+          <div class="bank-btn selected" id="bank-auto" onclick="selectBank('auto')">
+            <div class="bank-btn-logo">🔍</div>
+            <div class="bank-btn-name">Auto Detect</div>
+          </div>
+          <div class="bank-btn" id="bank-sbi" onclick="selectBank('sbi')">
+            <div class="bank-btn-logo">🏛️</div>
+            <div class="bank-btn-name">SBI</div>
+          </div>
+          <div class="bank-btn" id="bank-hdfc" onclick="selectBank('hdfc')">
+            <div class="bank-btn-logo">🔵</div>
+            <div class="bank-btn-name">HDFC</div>
+          </div>
+          <div class="bank-btn" id="bank-icici" onclick="selectBank('icici')">
+            <div class="bank-btn-logo">🟠</div>
+            <div class="bank-btn-name">ICICI</div>
+          </div>
+          <div class="bank-btn" id="bank-axis" onclick="selectBank('axis')">
+            <div class="bank-btn-logo">🟣</div>
+            <div class="bank-btn-name">Axis</div>
+          </div>
+          <div class="bank-btn" id="bank-kotak" onclick="selectBank('kotak')">
+            <div class="bank-btn-logo">🔴</div>
+            <div class="bank-btn-name">Kotak</div>
+          </div>
+          <div class="bank-btn" id="bank-yes" onclick="selectBank('yes')">
+            <div class="bank-btn-logo">🟢</div>
+            <div class="bank-btn-name">Yes Bank</div>
+          </div>
+          <div class="bank-btn" id="bank-pnb" onclick="selectBank('pnb')">
+            <div class="bank-btn-logo">🟡</div>
+            <div class="bank-btn-name">PNB</div>
+          </div>
+          <div class="bank-btn" id="bank-bob" onclick="selectBank('bob')">
+            <div class="bank-btn-logo">🟤</div>
+            <div class="bank-btn-name">Bank of Baroda</div>
+          </div>
+          <div class="bank-btn" id="bank-idbi" onclick="selectBank('idbi')">
+            <div class="bank-btn-logo">⚪</div>
+            <div class="bank-btn-name">IDBI</div>
+          </div>
+          <div class="bank-btn" id="bank-canara" onclick="selectBank('canara')">
+            <div class="bank-btn-logo">🏦</div>
+            <div class="bank-btn-name">Canara</div>
+          </div>
+          <div class="bank-btn" id="bank-other" onclick="selectBank('other')">
+            <div class="bank-btn-logo">📄</div>
+            <div class="bank-btn-name">Other</div>
+          </div>
+        </div>
+
+        <div class="how-to" id="how-to-box">
+          <div class="how-to-title">💡 How to download your SBI Net Banking statement</div>
+          <ul class="how-to-steps" id="how-to-steps">
+            <li>Login to <strong>onlinesbi.sbi</strong> → My Accounts & Profile</li>
+            <li>Click <strong>Account Statement</strong> → select your date range</li>
+            <li>Click <strong>Download</strong> → choose <strong>Excel</strong> (recommended) or <strong>PDF</strong></li>
+            <li>Upload that file here — no changes needed!</li>
+          </ul>
+        </div>
+
+        <div class="modal-actions" style="margin-top:18px;">
+          <button class="btn-modal-sec" onclick="closeImportModal()">Cancel</button>
+          <button class="btn-modal-pri" onclick="goToStep(2)">Next: Upload File →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Upload -->
+      <div id="import-step-2" style="display:none;">
+        <div class="drop-zone" id="drop-zone"
+          ondragover="handleDragOver(event)"
+          ondragleave="handleDragLeave(event)"
+          ondrop="handleDrop(event)">
+          <input type="file" id="csv-file-input" accept=".csv,.xls,.xlsx,.pdf" onchange="handleFileSelect(event)" />
+          <div class="drop-icon" id="drop-icon">📂</div>
+          <div class="drop-title" id="drop-title">Drop your statement here</div>
+          <div class="drop-sub" id="drop-sub">or <span>click to browse</span> — Excel (.xlsx), CSV or PDF accepted</div>
+        </div>
+        <div id="file-chosen" style="display:none; margin-top:12px; font-size:0.82rem; color:var(--green); text-align:center; font-weight:600;"></div>
+        <div id="file-parsing-status" style="display:none; margin-top:12px; font-size:0.82rem; color:var(--amber); text-align:center; font-weight:600;">⏳ Reading file, please wait…</div>
+
+        <!-- Password field — shown only when file is loaded -->
+        <div id="password-section" style="display:none; margin-top:18px;">
+          <div style="background:rgba(79,158,255,0.07); border:1px solid rgba(79,158,255,0.2); border-radius:10px; padding:14px 16px;">
+            <div style="font-size:0.78rem; font-weight:700; color:var(--blue); margin-bottom:10px; display:flex; align-items:center; gap:6px;">
+              🔒 File Password <span style="font-weight:400; color:var(--muted); font-size:0.72rem;">(SBI Net Banking PDFs & Excel files are password protected)</span>
+            </div>
+            <div style="position:relative;">
+              <input type="password" id="file-password" placeholder="Enter your statement password…"
+                style="padding-right:44px;"
+                onkeydown="if(event.key==='Enter' && !document.getElementById('btn-parse').disabled) parseCSV()"
+              />
+              <button onclick="togglePasswordVisibility()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:var(--muted);padding:4px;" id="pwd-eye" title="Show/hide password">👁</button>
+            </div>
+            <div style="margin-top:8px; font-size:0.72rem; color:var(--muted); display:flex; align-items:flex-start; gap:6px;">
+              <span style="color:var(--green); flex-shrink:0;">🛡</span>
+              <span>Your password is used <strong style="color:var(--text);">only inside your browser</strong> to unlock the file. It is never sent to any server.</span>
+            </div>
+            <div style="margin-top:6px; font-size:0.72rem; color:var(--muted); display:flex; align-items:flex-start; gap:6px;">
+              <span style="flex-shrink:0;">💡</span>
+              <span>SBI default password is usually your <strong style="color:var(--text);">account number</strong> or <strong style="color:var(--text);">registered mobile number</strong>. Check the email that came with the statement.</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions" style="margin-top:18px;">
+          <button class="btn-modal-sec" onclick="goToStep(1)">← Back</button>
+          <button class="btn-modal-pri" id="btn-parse" onclick="parseCSV()" disabled>Parse Statement →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Preview -->
+      <div id="import-step-3" style="display:none;">
+        <div id="detected-bank-badge" class="detected-badge" style="display:none;"></div>
+        <div class="import-summary">
+          <div class="summary-pill">
+            <div class="summary-pill-val" id="prev-total">0</div>
+            <div class="summary-pill-lbl">Transactions</div>
+          </div>
+          <div class="summary-pill">
+            <div class="summary-pill-val" style="color:var(--green);" id="prev-income">0</div>
+            <div class="summary-pill-lbl">Income</div>
+          </div>
+          <div class="summary-pill">
+            <div class="summary-pill-val" style="color:var(--red);" id="prev-expense">0</div>
+            <div class="summary-pill-lbl">Expenses</div>
+          </div>
+          <div class="summary-pill">
+            <div class="summary-pill-val" style="color:var(--amber);" id="prev-skipped">0</div>
+            <div class="summary-pill-lbl">Skipped</div>
+          </div>
+        </div>
+        <div class="preview-wrap">
+          <div class="preview-scroll">
+            <table class="preview-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Category</th>
+                </tr>
+              </thead>
+              <tbody id="preview-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div id="import-error" style="display:none; background:rgba(255,94,126,0.1); border:1px solid rgba(255,94,126,0.3); border-radius:8px; padding:12px 16px; font-size:0.82rem; color:#ff9eb4; margin-bottom:14px;"></div>
+        <div class="modal-actions">
+          <button class="btn-modal-sec" onclick="goToStep(2)">← Re-upload</button>
+          <button class="btn-modal-pri" id="btn-confirm-import" onclick="confirmImport()">✅ Import All Transactions</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── PROFILE MODAL ── -->
+<div class="profile-overlay" id="profile-overlay" onclick="handleProfileOverlayClick(event)">
+  <div class="profile-modal" id="profile-modal">
+
+    <!-- Banner + avatar -->
+    <div class="profile-banner">
+      <div class="profile-banner-inner"></div>
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar-big" id="profile-avatar-big" title="Change photo">
+          <span id="profile-avatar-initials">?</span>
+          <img id="profile-avatar-img" src="" alt="" style="display:none"/>
+          <div class="profile-avatar-edit">📷 Change</div>
+          <input type="file" class="profile-avatar-input" id="profile-avatar-file" accept="image/*" onchange="handleAvatarChange(event)"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-header-row">
+      <div style="padding-left:100px;">
+        <div style="font-family:'Outfit',sans-serif;font-size:1.25rem;font-weight:800;color:var(--text)" id="profile-display-title">—</div>
+        <div style="font-size:.8rem;color:var(--muted);margin-top:2px" id="profile-email-title">—</div>
+      </div>
+      <button class="profile-close-btn" onclick="closeProfile()">✕</button>
+    </div>
+
+    <div class="profile-body">
+
+      <!-- Account stats -->
+      <div class="profile-stats" id="profile-stats">
+        <div class="profile-stat">
+          <div class="profile-stat-val" id="pstat-txn">0</div>
+          <div class="profile-stat-lbl">Transactions</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-val" style="color:var(--green)" id="pstat-income">—</div>
+          <div class="profile-stat-lbl">Total Income</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-val" style="color:var(--red)" id="pstat-expense">—</div>
+          <div class="profile-stat-lbl">Total Expenses</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-val" style="color:var(--blue)" id="pstat-since">—</div>
+          <div class="profile-stat-lbl">Member Since</div>
+        </div>
+      </div>
+
+      <!-- ── Personal Info ── -->
+      <div class="profile-section">
+        <div class="profile-section-title">👤 Personal Info</div>
+        <div id="profile-info-msg" class="profile-msg"></div>
+        <div class="profile-field-row">
+          <div class="profile-field">
+            <label>Display Name</label>
+            <input type="text" id="profile-name" placeholder="Your name" maxlength="40"/>
+          </div>
+          <div class="profile-field">
+            <label>Email Address</label>
+            <input type="email" id="profile-email" disabled/>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:4px;">
+          <button class="btn-profile-save" id="btn-save-name" onclick="saveDisplayName()">Save Name</button>
+        </div>
+      </div>
+
+      <!-- ── Change Password ── -->
+      <div class="profile-section">
+        <div class="profile-section-title">🔒 Change Password</div>
+        <div id="profile-pass-msg" class="profile-msg"></div>
+        <div id="google-provider-note" style="display:none;background:rgba(79,158,255,.07);border:1px solid rgba(79,158,255,.18);border-radius:8px;padding:10px 14px;font-size:.8rem;color:var(--muted);margin-bottom:12px;">
+          ℹ️ Your account uses Google Sign-In — password change is not available.
+        </div>
+        <div id="password-change-form">
+          <div class="profile-field">
+            <label>Current Password</label>
+            <input type="password" id="profile-cur-pass" placeholder="Current password"/>
+          </div>
+          <div class="profile-field-row">
+            <div class="profile-field">
+              <label>New Password</label>
+              <input type="password" id="profile-new-pass" placeholder="Min 6 characters"/>
+            </div>
+            <div class="profile-field">
+              <label>Confirm New Password</label>
+              <input type="password" id="profile-new-pass2" placeholder="Repeat new password"/>
+            </div>
+          </div>
+          <button class="btn-profile-save" id="btn-save-pass" onclick="changePassword()">Update Password</button>
+        </div>
+      </div>
+
+      <!-- ── Preferences ── -->
+      <div class="profile-section">
+        <div class="profile-section-title">⚙️ Preferences</div>
+        <div class="profile-field-row">
+          <div class="profile-field">
+            <label>Default Currency</label>
+            <input type="text" id="profile-cur-display" disabled style="cursor:default"/>
+          </div>
+          <div class="profile-field">
+            <label>Total Data Points</label>
+            <input type="text" id="profile-data-size" disabled style="cursor:default"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Danger Zone ── -->
+      <div class="danger-zone">
+        <div class="danger-zone-title">⚠️ Danger Zone</div>
+        <div class="danger-zone-desc">
+          Deleting your account is <strong style="color:var(--text)">permanent and irreversible</strong>. All your transactions, settings, and data stored in FinanceTracker will be erased immediately. This cannot be undone.
+        </div>
+        <button class="btn-danger" onclick="openReauth('delete')">🗑 Delete My Account</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── RE-AUTH MODAL (used for password change + account deletion) ── -->
+<div class="reauth-overlay" id="reauth-overlay" onclick="handleReauthOverlayClick(event)">
+  <div class="reauth-modal">
+    <div class="reauth-title" id="reauth-title">Confirm Your Identity</div>
+    <div class="reauth-sub" id="reauth-sub">For security, please enter your current password to continue.</div>
+    <div class="reauth-msg" id="reauth-msg"></div>
+    <div class="reauth-field">
+      <label>Password</label>
+      <input type="password" id="reauth-pass" placeholder="Your current password" onkeydown="if(event.key==='Enter')submitReauth()"/>
+    </div>
+    <div class="reauth-actions">
+      <button class="btn-profile-sec" onclick="closeReauth()" style="flex:1">Cancel</button>
+      <button class="btn-danger" onclick="submitReauth()" style="flex:2" id="btn-reauth-submit">Confirm →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PERF: Offline banner — shown automatically when navigator.onLine === false -->
+<div id="offline-banner">
+  📡 You're offline — changes are saved locally and will sync when you reconnect.
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
 </body>
 </html>
