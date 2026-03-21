@@ -2654,7 +2654,10 @@
       </div>
 
       <div class="form-group">
-        <label>Category</label>
+        <label style="display:flex;align-items:center;justify-content:space-between;">
+          Category
+          <button onclick="openCatManager()" type="button" style="background:none;border:none;color:var(--blue);font-size:0.78rem;font-weight:700;cursor:pointer;padding:0;font-family:'Outfit',sans-serif;">🏷️ Manage</button>
+        </label>
         <select id="tx-category">
           <option value="">— Select category —</option>
           <optgroup label="Income">
@@ -2819,6 +2822,7 @@
         <button class="btn-import" id="btn-import-main" onclick="openImportModal()">🏦 Import Statement</button>
         <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
         <button class="btn-delete-all" onclick="confirmDeleteAll()">🗑 Delete All</button>
+        <button class="btn-delete-all" onclick="openCatManager()" style="background:rgba(79,158,255,0.1);border-color:rgba(79,158,255,0.35);color:var(--blue);">🏷️ Categories</button>
       </div>
     </div>
     <div class="tx-list" id="tx-list">
@@ -3154,7 +3158,7 @@
     if (_authAttempts[k]) _authAttempts[k] = { count:0, resetAt: Date.now() + 60_000 };
   }
 
-  const catMeta = {
+  let catMeta = {
     salary:     { icon: '💼', label: 'Salary' },
     freelance:  { icon: '💻', label: 'Freelance' },
     investment: { icon: '📈', label: 'Investment' },
@@ -3168,6 +3172,178 @@
     cash:       { icon: '💵', label: 'Cash' },
     other:      { icon: '🔖', label: 'Other' },
   };
+
+  // Custom categories stored in Firebase — merged into catMeta at runtime
+  let customCategories = {}; // { key: { icon, label } }
+
+  // Rebuild both category dropdowns whenever catMeta changes
+  function rebuildCategorySelects() {
+    // ── Add Transaction select ──
+    const txSel = document.getElementById('tx-category');
+    if (txSel) {
+      const curVal = txSel.value;
+      // Build custom options HTML
+      const customOpts = Object.entries(customCategories)
+        .map(([k, v]) => `<option value="${k}">${v.icon} ${v.label}</option>`)
+        .join('');
+      txSel.innerHTML = `
+        <option value="">— Select category —</option>
+        <optgroup label="Income">
+          <option value="salary">💼 Salary</option>
+          <option value="freelance">💻 Freelance</option>
+          <option value="investment">📈 Investment</option>
+        </optgroup>
+        <optgroup label="Expense">
+          <option value="food">🍔 Food &amp; Dining</option>
+          <option value="transport">🚗 Transport</option>
+          <option value="housing">🏠 Housing</option>
+          <option value="health">❤️ Health</option>
+          <option value="shopping">🛍 Shopping</option>
+          <option value="movies">🎬 Movies</option>
+        </optgroup>
+        <option value="atm">🏧 ATM</option>
+        <option value="cash">💵 Cash</option>
+        <option value="other">🔖 Other</option>
+        ${customOpts ? `<optgroup label="Custom">${customOpts}</optgroup>` : ''}`;
+      if (curVal) txSel.value = curVal;
+    }
+
+    // ── Filter select ──
+    const fSel = document.getElementById('filter-cat');
+    if (fSel) {
+      const curVal = fSel.value;
+      const customOpts = Object.entries(customCategories)
+        .map(([k, v]) => `<option value="${k}">${v.icon} ${v.label}</option>`)
+        .join('');
+      fSel.innerHTML = `
+        <option value="all">All Categories</option>
+        <option value="salary">💼 Salary</option>
+        <option value="freelance">💻 Freelance</option>
+        <option value="investment">📈 Investment</option>
+        <option value="food">🍔 Food</option>
+        <option value="transport">🚗 Transport</option>
+        <option value="housing">🏠 Housing</option>
+        <option value="health">❤️ Health</option>
+        <option value="shopping">🛍 Shopping</option>
+        <option value="movies">🎬 Movies</option>
+        <option value="atm">🏧 ATM</option>
+        <option value="cash">💵 Cash</option>
+        <option value="other">🔖 Other</option>
+        ${customOpts}`;
+      fSel.value = curVal || 'all';
+    }
+  }
+
+  // Merge custom categories into catMeta and rebuild UI
+  function applyCustomCategories() {
+    // Reset to built-in first
+    Object.keys(catMeta).forEach(k => {
+      if (catMeta[k]._custom) delete catMeta[k];
+    });
+    // Merge custom
+    Object.entries(customCategories).forEach(([k, v]) => {
+      catMeta[k] = { icon: v.icon, label: v.label, _custom: true };
+    });
+    rebuildCategorySelects();
+  }
+
+  // Save custom categories to Firebase
+  function saveCustomCategories() {
+    if (userDbRef) userDbRef.update({ customCategories });
+  }
+
+  // Add a new custom category
+  function addCustomCategory(label, icon) {
+    label = label.trim();
+    icon  = icon.trim() || '🏷️';
+    if (!label) return toast('⚠️ Please enter a category name');
+    // Generate a safe key
+    const key = 'custom_' + label.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
+    customCategories[key] = { icon, label };
+    applyCustomCategories();
+    saveCustomCategories();
+    toast(`✅ Category "${icon} ${label}" added!`);
+    return key;
+  }
+
+  // Delete a custom category
+  function deleteCustomCategory(key) {
+    const cat = customCategories[key];
+    if (!cat) return;
+    if (!confirm(`Delete category "${cat.icon} ${cat.label}"?\n\nExisting transactions with this category will show as "Other".`)) return;
+    delete customCategories[key];
+    applyCustomCategories();
+    saveCustomCategories();
+    renderCatManagerModal();
+    toast(`🗑 Category deleted`);
+  }
+
+  // ── Category Manager Modal ──────────────────────────────────────
+  function openCatManager() {
+    let modal = document.getElementById('cat-manager-overlay');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'cat-manager-overlay';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(5,8,20,.88);backdrop-filter:blur(8px);z-index:700;display:flex;align-items:center;justify-content:center;padding:20px;';
+      modal.innerHTML = `<div id="cat-manager-modal" style="background:#0d1627;border:1px solid rgba(79,158,255,.2);border-radius:20px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;padding:24px;"></div>`;
+      modal.addEventListener('click', e => { if (e.target === modal) closeCatManager(); });
+      document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    renderCatManagerModal();
+  }
+
+  function closeCatManager() {
+    const m = document.getElementById('cat-manager-overlay');
+    if (m) m.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  function renderCatManagerModal() {
+    const modal = document.getElementById('cat-manager-modal');
+    if (!modal) return;
+
+    const customList = Object.entries(customCategories).map(([k, v]) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;margin-bottom:8px;">
+        <span style="font-size:1.3rem;">${v.icon}</span>
+        <span style="flex:1;font-size:.9rem;font-weight:600;color:var(--text);">${v.label}</span>
+        <button onclick="deleteCustomCategory('${k}')" style="background:rgba(255,94,126,.12);border:1px solid rgba(255,94,126,.3);border-radius:7px;color:#ff5e7e;cursor:pointer;padding:5px 10px;font-size:.78rem;font-weight:700;">Delete</button>
+      </div>`).join('') || `<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:16px 0;">No custom categories yet.</div>`;
+
+    modal.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:800;color:var(--text);">🏷️ Manage Categories</div>
+        <button onclick="closeCatManager()" style="background:none;border:1px solid rgba(255,255,255,.1);border-radius:7px;color:var(--muted);cursor:pointer;padding:5px 10px;font-size:.85rem;">✕</button>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Your Custom Categories</div>
+        ${customList}
+      </div>
+
+      <div style="border-top:1px solid rgba(255,255,255,.06);padding-top:16px;">
+        <div style="font-size:.75rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Add New Category</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="new-cat-icon" placeholder="🏷️" maxlength="4"
+            style="width:54px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:var(--text);font-size:1.2rem;padding:8px;text-align:center;outline:none;flex-shrink:0;">
+          <input id="new-cat-label" placeholder="Category name"
+            style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:var(--text);font-size:.88rem;padding:8px 12px;outline:none;"
+            onkeydown="if(event.key==='Enter')addCatFromModal()">
+        </div>
+        <button onclick="addCatFromModal()" style="width:100%;padding:11px;background:linear-gradient(135deg,#4f9eff,#a78bfa);border:none;border-radius:10px;color:#fff;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;">+ Add Category</button>
+      </div>`;
+  }
+
+  function addCatFromModal() {
+    const label = document.getElementById('new-cat-label').value.trim();
+    const icon  = document.getElementById('new-cat-icon').value.trim() || '🏷️';
+    if (!label) { document.getElementById('new-cat-label').focus(); return; }
+    addCustomCategory(label, icon);
+    document.getElementById('new-cat-label').value = '';
+    document.getElementById('new-cat-icon').value  = '';
+    renderCatManagerModal();
+  }
 
   // ════════════════════════════════════════
   // PERF 1 — LAZY LOADERS for XLSX + PDF.js
@@ -5753,6 +5929,11 @@
         }
         transactions=rawTx;
         if(data.currency){const c=CURRENCIES.find(x=>x.code===data.currency);if(c){activeCurrency=c;document.getElementById('cur-flag').textContent=c.flag;document.getElementById('cur-code').textContent=c.code;document.getElementById('cur-name').textContent=c.name;document.getElementById('amount-currency-label').textContent=c.symbol;}}
+        // Load custom categories from Firebase
+        if(data.customCategories && typeof data.customCategories === 'object'){
+          customCategories = data.customCategories;
+          applyCustomCategories();
+        }
         renderAll();
         // UI POLISH: mark app as ready — triggers entrance animations
         document.getElementById('main-app').classList.add('app-ready');
@@ -6217,6 +6398,875 @@
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════════
+     AI ASSISTANT — proxy-based, zero key exposure
+     API key lives ONLY on your backend proxy.
+     The browser never sees or stores it.
+     ══════════════════════════════════════════ -->
+<style>
+  /* ════════════════════════════
+     AI ASSISTANT STYLES
+     ════════════════════════════ */
+
+  .ai-fab {
+    position: fixed; bottom: 28px; right: 24px;
+    width: 56px; height: 56px; border-radius: 50%;
+    background: linear-gradient(135deg, #4f9eff 0%, #a78bfa 100%);
+    border: none; cursor: pointer;
+    box-shadow: 0 4px 20px rgba(79,158,255,0.5);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; z-index: 3000;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .ai-fab:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(79,158,255,0.65); }
+  .ai-fab.open  { transform: rotate(20deg) scale(1.08); }
+
+  .ai-panel {
+    position: fixed; bottom: 96px; right: 24px;
+    width: 370px; max-width: calc(100vw - 32px);
+    height: 540px; max-height: calc(100vh - 120px);
+    background: #0d1627;
+    border: 1px solid rgba(79,158,255,0.18);
+    border-radius: 20px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.55);
+    display: flex; flex-direction: column;
+    z-index: 2999;
+    transform: scale(0.85) translateY(20px);
+    transform-origin: bottom right;
+    opacity: 0; pointer-events: none;
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s;
+    overflow: hidden;
+  }
+  .ai-panel.open {
+    transform: scale(1) translateY(0);
+    opacity: 1; pointer-events: all;
+  }
+
+  .ai-panel-header {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid rgba(79,158,255,0.15);
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(79,158,255,0.1), rgba(167,139,250,0.1));
+  }
+  .ai-panel-header .ai-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #4f9eff, #a78bfa);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .ai-panel-header .ai-title {
+    font-family: 'Outfit', sans-serif; font-weight: 700;
+    font-size: 14px; flex: 1; color: var(--text);
+  }
+  .ai-panel-header .ai-subtitle {
+    font-size: 11px; color: var(--muted); margin-top: 1px;
+  }
+  .ai-header-btns { display: flex; gap: 6px; }
+  .ai-hdr-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 7px; color: var(--muted); cursor: pointer;
+    padding: 4px 8px; font-size: 12px; line-height: 1;
+    transition: all 0.15s;
+  }
+  .ai-hdr-btn:hover { border-color: rgba(255,255,255,0.25); color: var(--text); }
+
+  /* Setup screen — not needed, URL is hardcoded */
+  #ai-setup-screen { display: none !important; }
+
+  /* Messages */
+  .ai-messages {
+    flex: 1; overflow-y: auto; padding: 14px 14px 8px;
+    display: flex; flex-direction: column; gap: 10px;
+    scroll-behavior: smooth;
+  }
+  .ai-messages::-webkit-scrollbar { width: 4px; }
+  .ai-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  .ai-msg {
+    max-width: 88%; padding: 10px 13px;
+    border-radius: 14px; font-size: 13px; line-height: 1.55;
+    animation: aiMsgPop 0.18s ease;
+    word-break: break-word;
+  }
+  @keyframes aiMsgPop {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .ai-msg.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, rgba(79,158,255,0.25), rgba(167,139,250,0.25));
+    border: 1px solid rgba(79,158,255,0.3);
+    color: var(--text); border-bottom-right-radius: 4px;
+  }
+  .ai-msg.ai {
+    align-self: flex-start;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--text); border-bottom-left-radius: 4px;
+  }
+  .ai-msg.ai.typing {
+    background: transparent !important;
+    padding: 4px 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Thinking animation */
+  .ai-thinking { display: flex; align-items: center; gap: 10px; }
+  .ai-thinking-icon { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
+  .ai-thinking-icon svg { width: 32px; height: 32px; }
+  .ai-thinking-ring {
+    position: absolute; top: 0; left: 0; width: 32px; height: 32px;
+    border-radius: 50%; border: 2px solid transparent;
+    border-top-color: #4f9eff; border-right-color: #a78bfa;
+    animation: ai-spin 1s linear infinite;
+  }
+  @keyframes ai-spin { to { transform: rotate(360deg); } }
+  .ai-thinking-dots { display: flex; gap: 4px; align-items: center; }
+  .ai-thinking-dots span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #a78bfa; opacity: 0.3;
+    animation: ai-dot-pulse 1.4s ease-in-out infinite;
+  }
+  .ai-thinking-dots span:nth-child(1) { animation-delay: 0s; }
+  .ai-thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .ai-thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes ai-dot-pulse {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1.2); }
+  }
+
+  /* Suggestion chips */
+  .ai-chips {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    padding: 4px 14px 10px; flex-shrink: 0;
+  }
+  .ai-chip {
+    background: rgba(79,158,255,0.08);
+    border: 1px solid rgba(79,158,255,0.22);
+    border-radius: 20px; color: rgba(160,200,255,0.85);
+    font-size: 0.73rem; padding: 5px 10px;
+    cursor: pointer; transition: all 0.15s;
+    white-space: nowrap; font-family: 'Outfit', sans-serif;
+  }
+  .ai-chip:hover { background: rgba(79,158,255,0.18); color: var(--text); border-color: rgba(79,158,255,0.45); }
+
+  /* Image preview */
+  .ai-img-preview {
+    padding: 8px 14px 4px; display: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .ai-img-preview-row { display: inline-flex; align-items: flex-start; gap: 6px; position: relative; }
+  .ai-img-preview img {
+    max-height: 72px; max-width: 100px; border-radius: 10px;
+    display: block; object-fit: cover; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .ai-img-remove {
+    position: absolute; top: -6px; right: -6px;
+    background: var(--text); color: var(--bg);
+    border: none; border-radius: 50%;
+    width: 18px; height: 18px; font-size: 10px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+  .ai-chat-img {
+    max-width: 200px; max-height: 160px; border-radius: 10px;
+    display: block; margin-bottom: 4px; object-fit: cover;
+  }
+
+  /* Action preview cards */
+  .ai-task-preview {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-left: 3px solid #4f9eff;
+    border-radius: 10px; padding: 8px 12px;
+    margin: 4px 0; font-size: 12px;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .ai-task-preview .atp-name { font-weight: 600; flex: 1; color: var(--text); }
+  .ai-task-preview .atp-meta { opacity: 0.6; font-size: 11px; white-space: nowrap; }
+  .ai-task-preview .atp-remove {
+    background: none; border: none; cursor: pointer;
+    color: #ff5e7e; font-size: 14px; padding: 0 2px;
+    opacity: 0.6; transition: opacity 0.15s;
+  }
+  .ai-task-preview .atp-remove:hover { opacity: 1; }
+
+  /* Input row */
+  .ai-input-row {
+    padding: 10px 12px 12px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex; gap: 7px; flex-shrink: 0; align-items: flex-end;
+  }
+  .ai-input-row textarea {
+    flex: 1; resize: none; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 9px 12px;
+    font-family: inherit; font-size: 13px;
+    background: rgba(255,255,255,0.05); color: var(--text);
+    outline: none; line-height: 1.4; max-height: 90px;
+    transition: border-color 0.2s;
+  }
+  .ai-input-row textarea:focus { border-color: rgba(79,158,255,0.4); }
+  .ai-input-row textarea::placeholder { color: var(--muted); }
+  .ai-img-btn {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.05); color: var(--muted);
+    border: 1px solid rgba(255,255,255,0.1); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    align-self: flex-end; flex-shrink: 0; transition: all 0.2s;
+  }
+  .ai-img-btn:hover { background: linear-gradient(135deg,#4f9eff,#a78bfa); color: #fff; border-color: transparent; }
+  .ai-send-btn {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: linear-gradient(135deg, #4f9eff, #a78bfa); color: #fff;
+    border: none; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    align-self: flex-end; flex-shrink: 0;
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  .ai-send-btn:hover { opacity: 0.85; transform: scale(1.06); }
+  .ai-send-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  @media (max-width: 480px) {
+    .ai-panel { bottom: 80px; right: 12px; left: 12px; width: auto; height: 72vh; border-radius: 20px; }
+    .ai-fab   { bottom: 18px; right: 16px; }
+  }
+</style>
+
+<!-- Floating AI button -->
+<button class="ai-fab" id="aiFab" onclick="toggleAIPanel()" title="Finance AI Assistant">🤖</button>
+
+<!-- AI chat panel -->
+<div class="ai-panel" id="aiPanel">
+
+  <!-- Header -->
+  <div class="ai-panel-header">
+    <div class="ai-avatar">🤖</div>
+    <div style="flex:1;min-width:0;">
+      <div class="ai-title">Finance Assistant</div>
+      <div class="ai-subtitle" id="aiSubtitle">Gemini 2.0 Flash</div>
+    </div>
+    <div class="ai-header-btns">
+      <button class="ai-hdr-btn" onclick="clearAIChat()" title="Clear chat">🗑</button>
+    </div>
+  </div>
+
+  <!-- Chat screen — always visible, proxy URL is hardcoded -->
+  <div id="ai-chat-screen" style="display:flex;flex:1;flex-direction:column;overflow:hidden;min-height:0;">
+    <div class="ai-messages" id="aiMessages"></div>
+    <div class="ai-chips" id="aiChips">
+      <button class="ai-chip" onclick="aiChipSend(this)">📊 Spending summary</button>
+      <button class="ai-chip" onclick="aiChipSend(this)">💰 How to save more?</button>
+      <button class="ai-chip" onclick="aiChipSend(this)">🏆 Top categories</button>
+      <button class="ai-chip" onclick="aiChipSend(this)">📈 Income vs expenses</button>
+      <button class="ai-chip" onclick="aiChipSend(this)">🎯 Budget advice</button>
+    </div>
+    <div class="ai-img-preview" id="aiImgPreview">
+      <div class="ai-img-preview-row">
+        <img id="aiImgThumb" src="" alt="preview">
+        <button class="ai-img-remove" onclick="removeAIImage()" title="Remove">✕</button>
+      </div>
+    </div>
+    <div class="ai-input-row">
+      <input type="file" id="aiImageInput" accept="image/*" style="display:none" onchange="aiImageSelected(event)">
+      <button class="ai-img-btn" id="aiImgBtn"
+        onclick="document.getElementById('aiImageInput').click()" title="Upload image">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </button>
+      <textarea id="aiInput" placeholder="Ask anything about your finances…" rows="1"
+        onkeydown="aiInputKeydown(event)" oninput="autoResizeAI(this)"></textarea>
+      <button class="ai-send-btn" id="aiSend" onclick="sendAIMessage()">➤</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// FINANCE AI ASSISTANT
+// Calls Firebase Function geminiProxy — key lives on the server only.
+// ════════════════════════════════════════════════════════════════
+
+// Hardcoded Firebase Function URL — Gemini key is in index.js (server only)
+const AI_PROXY_URL = 'https://asia-southeast1-task-list-tracker-e80d4.cloudfunctions.net/geminiProxy';
+
+let aiPanelOpen    = false;
+let aiLoading      = false;
+let aiHistory      = [];      // [{role, content}]  multi-turn
+let aiPendingImage = null;    // {mimeType, data}   base64
+let aiMsgCounter   = 0;
+
+// ── System prompt — built dynamically to include custom categories ─
+function getAISystem() {
+  const builtIn = 'salary, freelance, investment, food, transport, housing, health, shopping, movies, atm, cash, other';
+  const custom  = (typeof customCategories !== 'undefined' && Object.keys(customCategories).length > 0)
+    ? '\nCUSTOM USER CATEGORIES: ' + Object.entries(customCategories).map(([k,v]) => k + ' (' + v.icon + ' ' + v.label + ')').join(', ')
+    : '';
+  return `You are a personal finance assistant built into FinanceTracker.
+You receive the user's real financial data at the start of every message — use it.
+
+RESPONSE MODES:
+
+1. CHAT — questions, analysis, advice. Reply in plain text.
+   Use **bold** for key numbers. Use bullet points for lists. Keep it concise.
+
+2. ACTION — for adding transactions, creating categories, or recategorizing.
+   Output raw JSON only (no markdown fences):
+   {"type":"action","message":"Brief summary","ops":[...]}
+
+   Available ops:
+
+   ADD a transaction:
+   {"op":"add","desc":"...","amount":500,"type":"expense","cat":"food","date":"YYYY-MM-DD"}
+
+   CREATE a custom category (suggest 8 contextually relevant emojis based on the category name — think about what the category represents and pick fitting emojis, different every time):
+   {"op":"create_category","label":"Gym","emoji_options":["🏋️","💪","🤸","🏃","⚡","🥊","🎯","🔥"],"key":"gym"}
+   For "Shreyansh" (a person's name): use person/friendship emojis like 👤🤝🧑💬🫂👋🙏💰
+   For "Mom" or "Mother": use family emojis like 👩‍👧💝👩‍👦🫶❤️🏠🌸💐
+   For "Netflix": use entertainment emojis like 🎬🍿📺🎭🎞️🎥🌟✨
+   For "Groceries": use food/shopping emojis like 🛒🥦🛍️🍎🥛🧺🏪🛺
+   Always pick emojis that MAKE SENSE for the specific category name given.
+   The user can also type their own custom emoji if none of the suggestions fit.
+
+   RECATEGORIZE transactions whose description contains a keyword:
+   {"op":"recategorize","match":"shreyansh","new_cat":"shreyansh"}
+
+   You can combine ops in one array, e.g. create_category AND recategorize together.
+   Example — "create Shreyansh category and move all Shreyansh transactions":
+   {"type":"action","message":"Creating Shreyansh category and moving matching transactions","ops":[
+     {"op":"create_category","label":"Shreyansh","emoji_options":["👤","🤝","💸","👥","🏷️"],"key":"shreyansh"},
+     {"op":"recategorize","match":"shreyansh","new_cat":"shreyansh"}
+   ]}
+   Built-in cats: ${builtIn}${custom}
+   Valid types: income, expense
+
+Rules:
+- Always reference actual numbers from the snapshot.
+- Dates: YYYY-MM-DD. Resolve today/yesterday/last Monday from snapshot's TODAY field.
+- Never fabricate data not in the snapshot.
+- Keep responses under 250 words unless a detailed breakdown is requested.
+- CRITICAL: When asked to create a category, you MUST output a create_category action op. NEVER tell the user to use a button. You have full ability to create categories via the action system.
+- When creating a category, ALWAYS include 8 contextually relevant emoji_options based on what the category name means. Make them specific and relevant — not generic.
+- Category key: lowercase letters, numbers, underscores only.`;
+}
+
+// Proxy URL is hardcoded — no setup needed
+
+// ── Panel toggle ─────────────────────────────────────────────────
+window.toggleAIPanel = function() {
+  aiPanelOpen = !aiPanelOpen;
+  document.getElementById('aiPanel').classList.toggle('open', aiPanelOpen);
+  document.getElementById('aiFab').classList.toggle('open', aiPanelOpen);
+  if (aiPanelOpen) {
+    if (aiHistory.length === 0) showAIWelcome();
+    setTimeout(() => document.getElementById('aiInput') &&
+      document.getElementById('aiInput').focus(), 280);
+  }
+};
+
+// ── Welcome message ───────────────────────────────────────────────
+function showAIWelcome() {
+  const txs = (typeof transactions !== 'undefined') ? transactions : [];
+  if (txs.length > 0) {
+    const cur      = (typeof activeCurrency !== 'undefined' && activeCurrency.symbol) ? activeCurrency.symbol : (typeof currentCurrencySymbol !== 'undefined') ? currentCurrencySymbol : '₹';
+    // Match app's exact logic: income excludes cat==='cash', no date filter for all-time
+    const totalInc = txs.filter(t => t.type === 'income' && t.cat !== 'cash').reduce((s, t) => s + t.amount, 0);
+    const totalExp = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const balance  = totalInc - totalExp;
+    appendAIMessage('ai',
+      'Hi! 👋 Your current balance is **' + cur + balance.toFixed(2) + '**\n\nHow can I help you today?'
+    );
+  } else {
+    appendAIMessage('ai',
+      'Hi! 👋 I\'m your finance assistant.\n\nAdd some transactions and I\'ll give you personalised insights!'
+    );
+  }
+  aiHistory.push({ role: 'assistant', content: '__welcome__' });
+}
+
+window.clearAIChat = function() {
+  if (!confirm('Clear this conversation?')) return;
+  aiHistory = [];
+  document.getElementById('aiMessages').innerHTML = '';
+  document.getElementById('aiChips').style.display = 'flex';
+  showAIWelcome();
+};
+
+// Also expose a silent reset for programmatic use
+function aiResetHistory() {
+  aiHistory = [];
+}
+
+// ── Financial context snapshot ───────────────────────────────────
+function buildFinanceContext() {
+  try {
+    const txs = (typeof transactions !== 'undefined') ? transactions : [];
+    if (!txs.length) return 'No transactions yet.';
+    const cur      = (typeof activeCurrency !== 'undefined' && activeCurrency.symbol) ? activeCurrency.symbol : (typeof currentCurrencySymbol !== 'undefined') ? currentCurrencySymbol : '₹';
+    const todayStr = new Date().toISOString().slice(0, 10);
+
+    // Match app's exact logic: income excludes cat==='cash'
+    const totalInc = txs.filter(t => t.type === 'income' && t.cat !== 'cash').reduce((s, t) => s + t.amount, 0);
+    const totalExp = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+    const balance  = totalInc - totalExp;
+
+    // ── This month totals ──
+    const thisMonth = todayStr.slice(0, 7); // YYYY-MM
+    const monthTxs  = txs.filter(t => t.date && t.date.startsWith(thisMonth));
+    const monthInc  = monthTxs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+    const monthExp  = monthTxs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+    // ── Category breakdown (all-time expenses) ──
+    const catTotals = {};
+    txs.forEach(t => {
+      if (t.type === 'expense') catTotals[t.cat] = (catTotals[t.cat] || 0) + t.amount;
+    });
+    const catLines = Object.entries(catTotals)
+      .sort((a, b) => b[1] - a[1]).slice(0, 10)
+      .map(([c, v]) => '  ' + c + ': ' + cur + v.toFixed(2)).join('\n');
+
+    // ── Recent 15 transactions (sorted newest first) ──
+    const sorted = txs.slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    const recent = sorted.slice(0, 15).map(t =>
+      '  ' + t.date + ' | ' + (t.type === 'income' ? '+' : '-') +
+      cur + t.amount.toFixed(2) + ' | ' + t.cat + ' | ' + t.desc.slice(0, 55)
+    ).join('\n');
+
+    return 'TODAY: ' + todayStr + '\n' +
+      'TOTAL TRANSACTIONS: ' + txs.length + '\n\n' +
+      'ALL-TIME:\n' +
+      '  Income:   ' + cur + totalInc.toFixed(2) + ' (' + txs.filter(t => t.type === 'income' && t.cat !== 'cash').length + ' txns)\n' +
+      '  Expenses: ' + cur + totalExp.toFixed(2) + ' (' + txs.filter(t => t.type === 'expense').length + ' txns)\n' +
+      '  Balance:  ' + cur + balance.toFixed(2) + '\n\n' +
+      'THIS MONTH (' + thisMonth + '):\n' +
+      '  Income:   ' + cur + monthInc.toFixed(2) + '\n' +
+      '  Expenses: ' + cur + monthExp.toFixed(2) + '\n' +
+      '  Balance:  ' + cur + (monthInc - monthExp).toFixed(2) + '\n\n' +
+      'EXPENSE BY CATEGORY (all-time):\n' + (catLines || '  none') + '\n\n' +
+      (Object.keys(customCategories || {}).length > 0
+        ? 'CUSTOM CATEGORIES: ' + Object.entries(customCategories).map(([k,v]) => v.icon + ' ' + v.label + ' (key:' + k + ')').join(', ') + '\n\n'
+        : '') +
+      'RECENT 15 TRANSACTIONS:\n' + (recent || '  none');
+  } catch(e) {
+    return 'Finance data unavailable.';
+  }
+}
+
+// ── Image handling ────────────────────────────────────────────────
+window.aiImageSelected = function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const parts    = ev.target.result.split(',');
+    const mimeType = parts[0].match(/:(.*?);/)[1];
+    aiPendingImage = { mimeType: mimeType, data: parts[1] };
+    document.getElementById('aiImgThumb').src = ev.target.result;
+    document.getElementById('aiImgPreview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.removeAIImage = function() {
+  aiPendingImage = null;
+  document.getElementById('aiImgPreview').style.display = 'none';
+  document.getElementById('aiImgThumb').src = '';
+  document.getElementById('aiImageInput').value = '';
+};
+
+// ── Send message ──────────────────────────────────────────────────
+window.sendAIMessage = async function() {
+  if (aiLoading) return;
+  const input = document.getElementById('aiInput');
+  const text  = input.value.trim();
+  if (!text && !aiPendingImage) return;
+
+  const proxyUrl = AI_PROXY_URL;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('aiChips').style.display = 'none';
+
+  // Show user bubble
+  if (aiPendingImage) {
+    const imgHtml = '<img class="ai-chat-img" src="data:' + aiPendingImage.mimeType + ';base64,' +
+      aiPendingImage.data + '" alt="uploaded">' +
+      (text ? '<div style="margin-top:4px;">' + escHtml(text) + '</div>' : '');
+    appendAIMessage('user', imgHtml);
+  } else {
+    appendAIMessage('user', escHtml(text));
+  }
+
+  // Build user content with finance snapshot prepended
+  const finCtx     = buildFinanceContext();
+  const userText   = 'FINANCIAL SNAPSHOT:\n' + finCtx + '\n\nUSER: ' +
+                     (text || 'Please analyse the uploaded image.');
+
+  // Message content — array of parts for image+text, string for text-only
+  let userContent;
+  if (aiPendingImage) {
+    userContent = [
+      { inlineData: { mimeType: aiPendingImage.mimeType, data: aiPendingImage.data } },
+      { text: userText }
+    ];
+  } else {
+    userContent = userText;
+  }
+
+  aiHistory.push({ role: 'user', content: userContent });
+
+  const hadImage = !!aiPendingImage;
+  removeAIImage();
+
+  setAILoading(true);
+  const typingId = appendAIMessage('ai', '', true);
+
+  try {
+    // Build Gemini `contents` array from history
+    // Gemini roles: 'user' / 'model' (not 'assistant')
+    const contents = aiHistory.slice(0, -1)
+      .filter(m => m.content !== '__welcome__')
+      // Filter out old AI responses that incorrectly refused to create categories
+      .filter(m => !(m.role === 'assistant' && typeof m.content === 'string' &&
+        (m.content.includes("Categories button") || m.content.includes("can't create") || m.content.includes("cannot create"))))
+      .map(m => ({
+        role:  m.role === 'assistant' ? 'model' : 'user',
+        parts: Array.isArray(m.content) ? m.content : [{ text: m.content }],
+      }));
+
+    // Current user turn — text + optional image
+    const currentParts = [];
+    if (aiPendingImage) {
+      currentParts.push({ inlineData: { mimeType: aiPendingImage.mimeType, data: aiPendingImage.data } });
+    }
+    currentParts.push({ text: userText });
+    contents.push({ role: 'user', parts: currentParts });
+
+    // ── POST to your proxy ─────────────────────────────────────
+    // The proxy appends ?key=YOUR_GEMINI_KEY and calls Google.
+    // No API key ever appears in this browser-side code.
+    const response = await fetch(proxyUrl, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        model:              'gemini-2.0-flash-001',
+        systemInstruction:  { parts: [{ text: getAISystem() }] },
+        contents:           contents.slice(-14),   // last 14 turns for context
+        generationConfig:   { maxOutputTokens: 1024, temperature: 0.7 },
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.error?.message || 'Proxy returned ' + response.status);
+    }
+
+    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!raw) throw new Error('Empty response from proxy');
+
+    aiHistory.push({ role: 'assistant', content: raw });  // keep 'assistant' internally, map to 'model' when sending
+    removeAIMessage(typingId);
+
+    // Detect ACTION JSON response
+    let parsed = null;
+    const typeIdx = raw.search(/\{\s*"type"\s*:\s*"action"/);
+    if (typeIdx !== -1) {
+      let depth = 0, start = -1;
+      for (let i = typeIdx; i < raw.length; i++) {
+        if (raw[i] === '{') { if (start === -1) start = i; depth++; }
+        else if (raw[i] === '}') {
+          depth--;
+          if (depth === 0 && start !== -1) {
+            try { parsed = JSON.parse(raw.slice(start, i + 1)); } catch(e) { parsed = null; }
+            break;
+          }
+        }
+      }
+    }
+
+    if (parsed && parsed.type === 'action' && Array.isArray(parsed.ops) && parsed.ops.length) {
+      appendAIMessage('ai', parsed.message || 'Here\'s what I\'ll do:');
+      showAIActionPreview(parsed.ops);
+    } else {
+      appendAIMessage('ai', raw);
+    }
+
+  } catch(err) {
+    removeAIMessage(typingId);
+    appendAIMessage('ai', '❌ ' + (err.message || 'Something went wrong. Check your proxy URL.'));
+    console.error('[AI] error:', err);
+  } finally {
+    setAILoading(false);
+  }
+};
+
+// ── Action preview (confirm before adding transactions) ──────────
+function showAIActionPreview(ops) {
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-msg ai';
+  wrap.id = 'ai-action-preview-wrap';
+
+  ops.forEach((op, i) => {
+    const card = document.createElement('div');
+    card.className = 'ai-task-preview';
+    const cur = (typeof activeCurrency !== 'undefined' && activeCurrency.symbol) ? activeCurrency.symbol : '₹';
+
+    if (op.op === 'create_category') {
+      card.style.borderLeftColor = '#a78bfa';
+      // Emoji picker row
+      const emojiButtons = (op.emoji_options || ['🏷️']).map((em) =>
+        '<button onclick="aiPickEmoji(\''+i+'\',\''+em+'\')" style="font-size:1.5rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;cursor:pointer;padding:5px 9px;transition:all .15s;margin:2px;" title="'+em+'">'+em+'</button>'
+      ).join('');
+      card.innerHTML =
+        '<div style="flex:1">' +
+          '<div class="atp-name">🏷️ Create category: <strong>' + escHtml(op.label || '') + '</strong></div>' +
+          '<div class="atp-meta" style="margin-top:6px;flex-wrap:wrap;display:flex;gap:2px;align-items:center;">AI suggestions: ' + emojiButtons + '</div>' +
+          '<div style="margin-top:8px;display:flex;align-items:center;gap:6px;">' +
+            '<input id="ai-emoji-custom-'+i+'" placeholder="✏️ type any emoji" maxlength="4" ' +
+              'style="width:120px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--text);font-size:1.1rem;padding:5px 8px;outline:none;text-align:center;" ' +
+              'oninput="aiPickEmoji(\''+i+'\', this.value)" />' +
+            '<span style="font-size:.75rem;color:var(--muted);">or type your own</span>' +
+          '</div>' +
+          '<div id="ai-emoji-picked-'+i+'" style="font-size:.8rem;color:#a78bfa;margin-top:4px;display:none;"></div>' +
+        '</div>' +
+        '<button class="atp-remove" onclick="removeAIActionOp('+i+')" title="Remove">✕</button>';
+    } else if (op.op === 'recategorize') {
+      card.style.borderLeftColor = '#00e5a0';
+      // Count how many transactions will be affected
+      const txs = (typeof transactions !== 'undefined') ? transactions : [];
+      const matches = txs.filter(t => t.desc && t.desc.toLowerCase().includes((op.match||'').toLowerCase()));
+      card.innerHTML =
+        '<div>' +
+          '<div class="atp-name">🔄 Recategorize: move <strong>' + matches.length + ' transaction' + (matches.length!==1?'s':'') + '</strong> matching "' + escHtml(op.match||'') + '" → ' + escHtml(op.new_cat||'') + '</div>' +
+          '<div class="atp-meta">keyword: "' + escHtml(op.match||'') + '"</div>' +
+        '</div>' +
+        '<button class="atp-remove" onclick="removeAIActionOp('+i+')" title="Remove">✕</button>';
+    } else {
+      // Default: add transaction
+      card.style.borderLeftColor = op.type === 'income' ? '#00e5a0' : '#4f9eff';
+      const sign = op.type === 'income' ? '+' : '-';
+      card.innerHTML =
+        '<div>' +
+          '<div class="atp-name">➕ Add: ' + escHtml(op.desc || '') + ' · ' + sign + cur + (op.amount || 0) + '</div>' +
+          '<div class="atp-meta">' + (op.date || '') + ' · ' + (op.cat || 'other') + ' · ' + (op.type || 'expense') + '</div>' +
+        '</div>' +
+        '<button class="atp-remove" onclick="removeAIActionOp('+i+')" title="Remove">✕</button>';
+    }
+    wrap.appendChild(card);
+  });
+
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;gap:8px;margin-top:8px;';
+  bar.innerHTML =
+    '<button onclick="confirmAIActions()" style="flex:1;padding:8px;border-radius:10px;border:none;cursor:pointer;' +
+    'font-size:13px;font-family:inherit;font-weight:600;' +
+    'background:linear-gradient(135deg,#4f9eff,#a78bfa);color:#fff;">✅ Confirm (' + ops.length + ')</button>' +
+    '<button onclick="cancelAIActions()" style="flex:1;padding:8px;border-radius:10px;border:none;cursor:pointer;' +
+    'font-size:13px;font-family:inherit;font-weight:600;' +
+    'background:rgba(255,255,255,0.08);color:var(--text);">✕ Cancel</button>';
+  wrap.appendChild(bar);
+
+  document.getElementById('aiMessages').appendChild(wrap);
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  window._aiPendingOps = ops;
+}
+
+window.removeAIActionOp = function(index) {
+  if (!window._aiPendingOps) return;
+  window._aiPendingOps.splice(index, 1);
+  document.getElementById('ai-action-preview-wrap')?.remove();
+  if (!window._aiPendingOps.length) {
+    appendAIMessage('ai', 'All removed. Let me know if you want something different.');
+    return;
+  }
+  showAIActionPreview(window._aiPendingOps);
+};
+
+window.cancelAIActions = function() {
+  document.getElementById('ai-action-preview-wrap')?.remove();
+  window._aiPendingOps = [];
+  appendAIMessage('ai', 'Cancelled. Let me know if you want something else.');
+};
+
+window.confirmAIActions = async function() {
+  const ops = window._aiPendingOps || [];
+  if (!ops.length) return;
+  document.getElementById('ai-action-preview-wrap')?.remove();
+  window._aiPendingOps = [];
+
+  let done = 0;
+  let summary = [];
+
+  for (const op of ops) {
+    try {
+      if (op.op === 'add') {
+        const descEl = document.getElementById('tx-desc');
+        const amtEl  = document.getElementById('tx-amount');
+        const dateEl = document.getElementById('tx-date');
+        const catEl  = document.getElementById('tx-category');
+        if (descEl) descEl.value = op.desc || '';
+        if (amtEl)  amtEl.value  = op.amount || 0;
+        if (dateEl) dateEl.value = op.date || new Date().toISOString().slice(0, 10);
+        if (catEl)  catEl.value  = op.cat || 'other';
+        document.querySelectorAll('.type-btn').forEach(b => {
+          if (b.dataset.type === (op.type || 'expense') || b.textContent.toLowerCase().includes(op.type || 'expense')) b.click();
+        });
+        await new Promise(r => setTimeout(r, 60));
+        document.getElementById('btn-add')?.click();
+        await new Promise(r => setTimeout(r, 250));
+        done++;
+        summary.push('➕ Added transaction: ' + (op.desc || ''));
+
+      } else if (op.op === 'create_category') {
+        // Use the chosen emoji (set by aiPickEmoji) or fallback to first option
+        const emoji = op._chosenEmoji || (op.emoji_options && op.emoji_options[0]) || '🏷️';
+        const key   = addCustomCategory(op.label || 'Custom', emoji);
+        done++;
+        summary.push('🏷️ Created category: ' + emoji + ' ' + (op.label || ''));
+        // If a recategorize op references this key by label, update its new_cat to the real key
+        ops.forEach(o => {
+          if (o.op === 'recategorize' && o.new_cat === (op.key || op.label.toLowerCase())) {
+            o.new_cat = key;
+          }
+        });
+
+      } else if (op.op === 'recategorize') {
+        const keyword = (op.match || '').toLowerCase();
+        const newCat  = op.new_cat || 'other';
+        // Make sure the category exists in catMeta
+        if (!catMeta[newCat]) {
+          summary.push('⚠️ Category "' + newCat + '" not found — create it first.');
+          continue;
+        }
+        let count = 0;
+        transactions.forEach(t => {
+          if (t.desc && t.desc.toLowerCase().includes(keyword)) {
+            t.cat = newCat;
+            count++;
+          }
+        });
+        if (count > 0) {
+          save();
+          renderAll();
+          done++;
+          summary.push('🔄 Moved ' + count + ' transaction' + (count!==1?'s':'') + ' → ' + (catMeta[newCat].icon||'') + ' ' + (catMeta[newCat].label||newCat));
+        } else {
+          summary.push('ℹ️ No transactions found matching "' + (op.match||'') + '"');
+        }
+      }
+    } catch(e) {
+      console.error('[AI] action error:', e);
+      summary.push('❌ Error: ' + e.message);
+    }
+  }
+
+  appendAIMessage('ai', done > 0
+    ? summary.join('\n')
+    : summary.join('\n') || '⚠️ Nothing was changed.'
+  );
+};
+
+// ── Emoji picker for create_category op ──────────────────────────
+window.aiPickEmoji = function(opIndex, emoji) {
+  if (!window._aiPendingOps) return;
+  const op = window._aiPendingOps[opIndex];
+  if (!op || !emoji || !emoji.trim()) return;
+  op._chosenEmoji = emoji.trim();
+
+  // Visual feedback on suggestion buttons
+  const wrap = document.getElementById('ai-action-preview-wrap');
+  if (wrap && event && event.target && event.target.tagName === 'BUTTON') {
+    wrap.querySelectorAll('button[title]').forEach(b => {
+      b.style.background = 'rgba(255,255,255,.06)';
+      b.style.borderColor = 'rgba(255,255,255,.12)';
+    });
+    event.target.style.background = 'rgba(167,139,250,.35)';
+    event.target.style.borderColor = '#a78bfa';
+    // Clear the custom input if a button was clicked
+    const customInput = document.getElementById('ai-emoji-custom-' + opIndex);
+    if (customInput) customInput.value = '';
+  }
+
+  const pickedEl = document.getElementById('ai-emoji-picked-' + opIndex);
+  if (pickedEl) {
+    pickedEl.textContent = '✓ Using ' + emoji.trim() + ' for "' + (op.label || '') + '"';
+    pickedEl.style.display = 'block';
+  }
+};
+
+// ── Utility helpers ───────────────────────────────────────────────
+function setAILoading(state) {
+  aiLoading = state;
+  document.getElementById('aiSend').disabled  = state;
+  document.getElementById('aiInput').disabled = state;
+}
+
+function appendAIMessage(role, html, isTyping) {
+  const id  = 'aim-' + (++aiMsgCounter);
+  const div = document.createElement('div');
+  div.id        = id;
+  div.className = 'ai-msg ' + role + (isTyping ? ' typing' : '');
+
+  if (isTyping) {
+    div.innerHTML =
+      '<div class="ai-thinking">' +
+        '<div class="ai-thinking-icon">' +
+          '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+            '<circle cx="16" cy="16" r="14" fill="rgba(79,158,255,0.08)"/>' +
+            '<text x="16" y="21" text-anchor="middle" font-size="13" fill="#a78bfa">🤖</text>' +
+          '</svg>' +
+          '<div class="ai-thinking-ring"></div>' +
+        '</div>' +
+        '<div class="ai-thinking-dots"><span></span><span></span><span></span></div>' +
+      '</div>';
+  } else {
+    // Light markdown: **bold**, newlines → <br>
+    div.innerHTML = html
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  document.getElementById('aiMessages').appendChild(div);
+  div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  return id;
+}
+
+function removeAIMessage(id) {
+  document.getElementById(id)?.remove();
+}
+
+window.aiChipSend = function(btn) {
+  // Strip leading emoji + space
+  document.getElementById('aiInput').value = btn.textContent.replace(/^.\s/, '');
+  sendAIMessage();
+};
+
+window.aiInputKeydown = function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendAIMessage(); }
+};
+
+window.autoResizeAI = function(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+};
+
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && aiPanelOpen) toggleAIPanel();
+});
+
+// Init
+(function aiInit() {
+  // nothing to init — proxy URL is hardcoded
+})();
+</script>
 
 </body>
 </html>
