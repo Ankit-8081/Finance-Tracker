@@ -825,7 +825,7 @@
       from { opacity: 0; transform: translateY(-8px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .tx-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+    .tx-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
     .tx-icon {
       width: 38px; height: 38px;
       border-radius: 10px;
@@ -833,7 +833,7 @@
       font-size: 1.1rem;
       flex-shrink: 0;
     }
-    .tx-name { font-weight: 600; font-size: 0.92rem; margin-bottom: 3px; }
+    .tx-name { font-weight: 600; font-size: 0.92rem; margin-bottom: 3px; word-break: break-word; }
     .tx-meta { display: flex; gap: 8px; align-items: center; }
     .tx-date { font-size: 0.75rem; color: var(--muted); }
     .cat-badge {
@@ -925,6 +925,7 @@
     .cat-icon-transport  { background: rgba(61,128,244,0.2); }    /* 🚗 royal blue */
     .cat-icon-freelance  { background: rgba(130,94,237,0.2); }    /* 💻 violet */
     .cat-icon-shopping   { background: rgba(235,60,235,0.2); }    /* 🛍 magenta */
+    .cat-icon-movies     { background: rgba(255,77,109,0.2); }    /* 🎬 cinematic red */
 
     /* Toast */
     /* ══════════════════════════════════════════
@@ -1320,118 +1321,172 @@
         padding-right:  env(safe-area-inset-right);
       }
 
-      /* Header: hide date text, compress gap */
-      header { padding: 12px 16px; gap: 10px; }
+      /* Header: compact, no overflow */
+      header { padding: 10px 14px; gap: 8px; }
       .header-date { display: none; }
-      .header-right { gap: 10px; }
-      /* Shrink currency trigger text on small screens */
+      .header-right { gap: 8px; }
+      .logo { font-size: 1.15rem; }
+
+      /* Currency trigger: smaller */
       .cur-info-name { display: none; }
-      .cur-trigger { min-width: 80px; padding: 6px 10px 6px 9px; }
-      /* Hide Import button text label — show icon only */
-      .btn-import { font-size: 0; padding: 9px 12px; }
-      .btn-import::before { content: '🏦'; font-size: 1.1rem; }
+      .cur-trigger { min-width: 72px; padding: 5px 8px 5px 8px; gap: 6px; }
+      .cur-info-code { font-size: 0.8rem; }
+      .cur-flag-big { font-size: 1rem; }
+
+      /* User pill: compact */
+      .user-email-short { display: none; }
+      .user-pill { padding: 4px 10px 4px 4px; gap: 6px; }
+
+      /* PWA install button: icon only */
+      #btn-pwa-install { font-size: 0; padding: 7px 10px; min-width: 36px; }
+      #btn-pwa-install::before { content: '📲'; font-size: 1rem; }
 
       /* Main content padding */
-      main { padding: 16px 12px; }
+      main { padding: 14px 12px; }
 
-      /* Stat cards: horizontal compact on phone */
+      /* Stat cards: 2-col grid, balance full width */
       .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
       .stat-card { padding: 14px 14px; }
       .stat-icon { font-size: 1.2rem; }
-      .stat-value { font-size: 1.4rem; }
-      .stat-sub { font-size: 0.7rem; }
-      /* Balance card full-width */
+      .stat-value { font-size: 1.3rem; }
+      .stat-label { font-size: 0.65rem; }
+      .stat-sub { font-size: 0.68rem; }
       .stat-card.balance { grid-column: 1 / -1; }
 
-      /* Form panel */
-      .panel { padding: 20px 16px; }
+      /* Panel padding */
+      .panel { padding: 18px 14px; }
 
-      /* ── SAFARI AUTO-ZOOM FIX ──
-         Any input/select with font-size < 16px causes iOS Safari to zoom in
-         on tap. Enforcing 16px on mobile prevents this entirely. */
-      input, select, textarea {
-        font-size: 16px !important;
-      }
+      /* SAFARI AUTO-ZOOM FIX */
+      input, select, textarea { font-size: 16px !important; }
 
-      /* Transaction controls bar: wrap to two rows, full-width selects */
-      .tx-header { flex-direction: column; align-items: stretch; }
+      /* ── Transaction controls: full-width stacked layout ── */
+      .tx-header { flex-direction: column; align-items: stretch; gap: 10px; }
       .tx-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+      }
+      /* Filter selects row */
+      .tx-controls-filters {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 8px;
       }
-      .tx-controls .btn-import { grid-column: 1 / -1; font-size: 0.82rem !important; }
-      .tx-controls .btn-import::before { content: none; }
-      .tx-controls .btn-export,
-      .tx-controls .btn-delete-all { font-size: 0.8rem; padding: 9px 10px; }
-      .filter-select { width: 100%; padding: 10px 12px; }
-      .sort-select { grid-column: 1 / -1; }
+      .filter-select { width: 100%; padding: 10px 8px; font-size: 0.8rem !important; }
 
-      /* Transaction items: stack description/amount vertically on very small screens */
-      .tx-item { padding: 12px 12px; gap: 8px; }
+      /* Action buttons: each full width, distinctive */
+      .btn-import {
+        width: 100%;
+        font-size: 0.88rem !important;
+        padding: 11px 16px;
+        text-align: center;
+      }
+      .btn-import::before { content: none !important; }
+      .btn-export {
+        width: 100%;
+        font-size: 0.88rem;
+        padding: 11px 16px;
+        text-align: center;
+      }
+      .btn-delete-all {
+        width: 100%;
+        font-size: 0.88rem;
+        padding: 11px 16px;
+        text-align: center;
+      }
+
+      /* ── Transaction items: fix overflow ── */
+      .tx-item {
+        padding: 12px 10px;
+        gap: 8px;
+        overflow: hidden;
+      }
+      .tx-left {
+        flex: 1;
+        min-width: 0; /* critical: allows text truncation */
+        gap: 8px;
+      }
+      .tx-info { flex: 1; min-width: 0; }
+      .tx-name {
+        font-size: 0.82rem;
+        word-break: break-word;
+      }
       .tx-right {
         flex-direction: column;
         align-items: flex-end;
-        gap: 6px;
-        margin-left: 8px;
+        gap: 5px;
+        flex-shrink: 0;
+        margin-left: 6px;
       }
-      /* Hide category select on mobile — too cramped; tap to change via long-press */
       .cat-select-box { display: none; }
-      .tx-amount { width: auto; font-size: 0.95rem; }
+      .tx-amount {
+        width: auto;
+        font-size: 0.9rem;
+        white-space: nowrap;
+      }
+      .tx-icon { width: 34px; height: 34px; font-size: 1rem; flex-shrink: 0; }
 
-      /* Bigger touch targets for delete/lock buttons (min 44×44px) */
+      /* Bigger touch targets for delete/lock buttons */
       .btn-delete, .btn-imported {
-        padding: 10px 12px;
-        min-width: 44px;
-        min-height: 44px;
+        padding: 8px 10px;
+        min-width: 36px;
+        min-height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.1rem;
+        font-size: 1rem;
       }
 
-      /* Date range bar: stack vertically */
-      .date-range-card, [style*="Date Range"] { flex-direction: column; align-items: stretch; }
-      .date-range-inputs { flex-wrap: wrap; }
-      .date-range-inputs input[type=date] { flex: 1; min-width: 130px; }
+      /* ── Pie chart ── */
+      #pie-body { grid-template-columns: 1fr !important; justify-items: center; }
+      #pie-canvas-wrap { width: 260px !important; height: 260px !important; }
+      #pie-legend { width: 100% !important; max-height: none !important; }
+      .pie-leg-row { font-size: 0.78rem; }
+      .pie-leg-amt { font-size: 0.68rem !important; }
+
+      /* Date range bar */
+      .date-range-card { flex-direction: column; align-items: stretch; gap: 10px; }
+      .date-range-inputs { flex-wrap: wrap; gap: 8px; }
+      .date-range-inputs input[type=date] { flex: 1; min-width: 120px; }
       .date-range-summary { margin-left: 0; }
+
+      /* Preset buttons wrap */
+      .preset-btns { flex-wrap: wrap; gap: 6px; }
 
       /* Pagination */
       .tx-pagination { flex-direction: column; align-items: center; }
 
-      /* Modals full-screen on mobile */
+      /* Modals full-screen sheet on mobile */
       .modal { max-width: 100% !important; border-radius: 20px 20px 0 0 !important; max-height: 92vh; }
-      .modal-overlay { align-items: flex-end; padding: 0; }
-
-      /* Profile modal */
+      .modal-overlay { align-items: flex-end !important; padding: 0 !important; }
       .profile-modal { max-width: 100% !important; border-radius: 16px 16px 0 0 !important; margin-top: auto; max-height: 94vh; }
-      .profile-overlay { align-items: flex-end; padding: 0; }
+      .profile-overlay { align-items: flex-end !important; padding: 0 !important; }
 
-      /* Bank grid: 2 columns on mobile */
+      /* Bank grid: 2 columns */
       .bank-grid { grid-template-columns: repeat(2, 1fr); }
 
-      /* Add transaction button — bigger tap area */
+      /* Add transaction button */
       .btn-add { padding: 15px; font-size: 1rem; min-height: 52px; }
-
-      /* Type toggle buttons */
       .type-btn { padding: 12px; min-height: 44px; }
 
       /* Currency dropdown full-width */
       .cur-dropdown { width: calc(100vw - 24px); right: -16px; }
 
-      /* Offline banner accounts for notch */
+      /* Monthly chart */
+      #monthlyChart { max-width: 100%; }
+
+      /* Offline banner */
       #offline-banner { padding-top: calc(10px + env(safe-area-inset-top)); }
     }
 
     /* ══════ MOBILE — 375px (iPhone SE / smallest phones) ══════ */
     @media (max-width: 375px) {
-      header { padding: 10px 12px; }
-      main   { padding: 12px 10px; }
+      header { padding: 8px 10px; }
+      main   { padding: 10px 8px; }
       .stats-grid { grid-template-columns: 1fr; }
       .stat-card.balance { grid-column: unset; }
-      .tx-controls { grid-template-columns: 1fr; }
-      .sort-select { grid-column: unset; }
-      .tx-controls .btn-import { grid-column: unset; }
+      .tx-controls-filters { grid-template-columns: 1fr 1fr; }
     }
 
     /* ══════ AUTH — SPLIT SCREEN ══════ */
@@ -2041,7 +2096,7 @@
     .cat-select-box{font-size:.78rem;font-weight:600;padding:6px 26px 6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.12);cursor:pointer;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;background-color:rgba(255,255,255,.05);color:var(--text);width:140px;transition:border-color .15s,background-color .15s}
     .cat-select-box:hover{border-color:rgba(255,255,255,.28);background-color:rgba(255,255,255,.08)}
     .cat-select-box option{background:#1a2540;color:#e2e8f0}
-    .tx-info{flex:1}
+    .tx-info{flex:1;min-width:0;}
     .sort-select{border-color:rgba(99,179,237,.35);color:#7ec8f7}
     .date-range-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:22px 24px 20px;margin-bottom:32px;position:relative;overflow:hidden}
     .date-range-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#a78bfa,#f472b6)}
@@ -2613,6 +2668,7 @@
             <option value="housing">🏠 Housing</option>
             <option value="health">❤️ Health</option>
             <option value="shopping">🛍 Shopping</option>
+            <option value="movies">🎬 Movies</option>
           </optgroup>
           <option value="atm">🏧 ATM</option>
           <option value="cash">💵 Cash</option>
@@ -2732,31 +2788,34 @@
     <div class="tx-header">
       <div class="panel-title" style="margin-bottom:0"><span>📋</span> Transactions</div>
       <div class="tx-controls">
-        <select class="filter-select sort-select" id="filter-sort" onchange="debouncedRenderList()">
-          <option value="newest">⬇ Newest First</option>
-          <option value="oldest">⬆ Oldest First</option>
-          <option value="highest">↕ Highest Amount</option>
-          <option value="lowest">↕ Lowest Amount</option>
-        </select>
-        <select class="filter-select" id="filter-type" onchange="debouncedRenderList()">
-          <option value="all">All Types</option>
-          <option value="income">Income Only</option>
-          <option value="expense">Expense Only</option>
-        </select>
-        <select class="filter-select" id="filter-cat" onchange="renderStats();debouncedRenderList()">
-          <option value="all">All Categories</option>
-          <option value="salary">💼 Salary</option>
-          <option value="freelance">💻 Freelance</option>
-          <option value="investment">📈 Investment</option>
-          <option value="food">🍔 Food</option>
-          <option value="transport">🚗 Transport</option>
-          <option value="housing">🏠 Housing</option>
-          <option value="health">❤️ Health</option>
-          <option value="shopping">🛍 Shopping</option>
-          <option value="atm">🏧 ATM</option>
-          <option value="cash">💵 Cash</option>
-          <option value="other">🔖 Other</option>
-        </select>
+        <div class="tx-controls-filters">
+          <select class="filter-select sort-select" id="filter-sort" onchange="debouncedRenderList()">
+            <option value="newest">⬇ Newest First</option>
+            <option value="oldest">⬆ Oldest First</option>
+            <option value="highest">↕ Highest Amount</option>
+            <option value="lowest">↕ Lowest Amount</option>
+          </select>
+          <select class="filter-select" id="filter-type" onchange="debouncedRenderList()">
+            <option value="all">All Types</option>
+            <option value="income">Income Only</option>
+            <option value="expense">Expense Only</option>
+          </select>
+          <select class="filter-select" id="filter-cat" onchange="renderStats();debouncedRenderList()">
+            <option value="all">All Categories</option>
+            <option value="salary">💼 Salary</option>
+            <option value="freelance">💻 Freelance</option>
+            <option value="investment">📈 Investment</option>
+            <option value="food">🍔 Food</option>
+            <option value="transport">🚗 Transport</option>
+            <option value="housing">🏠 Housing</option>
+            <option value="health">❤️ Health</option>
+            <option value="shopping">🛍 Shopping</option>
+            <option value="movies">🎬 Movies</option>
+            <option value="atm">🏧 ATM</option>
+            <option value="cash">💵 Cash</option>
+            <option value="other">🔖 Other</option>
+          </select>
+        </div>
         <button class="btn-import" id="btn-import-main" onclick="openImportModal()">🏦 Import Statement</button>
         <button class="btn-export" onclick="exportCSV()">⬇ Export CSV</button>
         <button class="btn-delete-all" onclick="confirmDeleteAll()">🗑 Delete All</button>
@@ -3104,6 +3163,7 @@
     housing:    { icon: '🏠', label: 'Housing' },
     health:     { icon: '❤️',  label: 'Health' },
     shopping:   { icon: '🛍',  label: 'Shopping' },
+    movies:     { icon: '🎬', label: 'Movies' },
     atm:        { icon: '🏧', label: 'ATM' },
     cash:       { icon: '💵', label: 'Cash' },
     other:      { icon: '🔖', label: 'Other' },
@@ -3905,6 +3965,9 @@
     // 🛍 Shopping — vivid hot magenta-pink. Unmistakably pink/purple.
     shopping:   { from:'#F0ABFC', mid:'#D946EF', to:'#701A75', glow:'#F5D0FE' },
 
+    // 🎬 Movies — deep cinematic red + golden popcorn warmth.
+    movies:     { from:'#FF4D6D', mid:'#C9184A', to:'#590D22', glow:'#FF758F' },
+
     // 🏧 ATM — electric neon cyan-teal. Machine-blue, very distinct.
     atm:        { from:'#67E8F9', mid:'#06B6D4', to:'#155E75', glow:'#A5F3FC' },
 
@@ -3945,6 +4008,7 @@
     housing:'#FECACA',    // 🏠 soft brick red
     health:'#FDA4AF',     // ❤️  rose crimson
     shopping:'#F5D0FE',   // 🛍 hot magenta
+    movies:'#FF758F',     // 🎬 cinematic red
     atm:'#A5F3FC',        // 🏧 neon cyan
     cash:'#D9F99D',       // 💵 neon lime
     other:'#FEF9C3'       // 🔖 pure yellow
@@ -4347,12 +4411,14 @@
     const d = desc.toLowerCase();
     const upiM=desc.match(/upi[\s\/](?:drc|drd|cr|dr|ref|reversal)[\s\/][\w\d]*[\s\/](.+)/i)?.[1]?.toLowerCase()||'';
     const allText=d+' '+upiM;
+    const noSpace=allText.replace(/\s+/g,''); // space-stripped version for broken words
     if(/atm[\s\.]?wdl|atm\s*cash/i.test(allText))                          return{cat:'atm',type:'expense'};
     if(/swiggy|zomato|domino|pizza|restaurant|caf[eé]|food|dining|burger|kfc|mcdonald|subway|blinkit|bigbasket|grocer|dunzo|zepto|supermo/i.test(allText)) return{cat:'food',type:'expense'};
     if(/uber|ola|rapido|metro|irctc|train|flight|bus|petrol|fuel|toll|parking|fastag|cab/i.test(allText))  return{cat:'transport',type:'expense'};
     if(/rent|housing|maintenance|society|electricity|water|gas.?bill|bijli|apartment|bescom|bwssb|mahanagar/i.test(allText)) return{cat:'housing',type:'expense'};
     if(!(/pine[\s]?lab|pinelabs/i.test(allText))&&/hospital|pharmacy|medical|doctor|apollo|\bhealth\b|medicine|\blab\b|pathology|chemist|netmeds|1mg|practo/i.test(allText)) return{cat:'health',type:'expense'};
     if(/amazon|flipkart|myntra|meesho|shopping|purchase|pos|retail|mall|store|mart|ajio|nykaa/i.test(allText)) return{cat:'shopping',type:'expense'};
+    if(/bookmyshow|bookmysh|bmsshow|bookmy|pvr|inox|cinepolis|district/i.test(noSpace)||/\bbms\b|movie|cinema|theatre|ticketshow|film/i.test(allText)) return{cat:'movies',type:'expense'};
     if(/netflix|hotstar|prime|spotify|jio|airtel|bsnl|vodafone|recharge|subscription|tata.?play/i.test(allText)) return{cat:'other',type:'expense'};
     if(/\bsalary\b|\bsal\b[\s_]?cr|\bpayroll\b|\bctc\b|\bstipend\b/i.test(allText)) return{cat:'salary',type:'income'};
     if(/freelance|invoice|client.?pay|upwork|fiverr/i.test(allText))         return{cat:'freelance',type:'income'};
