@@ -3717,12 +3717,16 @@
   function deleteCustomCategory(key) {
     const cat = customCategories[key];
     if (!cat) return;
-    if (!confirm(`Delete category "${cat.icon} ${cat.label}"?\n\nExisting transactions with this category will show as "Other".`)) return;
+    if (!confirm(`Delete category "${cat.icon} ${cat.label}"?\n\nExisting transactions with this category will be moved to Other.`)) return;
+    // Reassign all transactions using this category to 'other'
+    let reassigned = 0;
+    transactions.forEach(t => { if (t.cat === key) { t.cat = 'other'; reassigned++; } });
     delete customCategories[key];
     applyCustomCategories();
     saveCustomCategories();
+    renderAll();
     renderCatManagerModal();
-    toast(`🗑 Category deleted`);
+    toast(`🗑 Category deleted` + (reassigned > 0 ? ` · ${reassigned} transaction${reassigned > 1 ? 's' : ''} moved to Other` : ''));
   }
 
   // ── Category Manager Modal ──────────────────────────────────────
@@ -4360,7 +4364,7 @@
           const key=await getEncKey(currentUser.uid);
           txToWrite=await Promise.all(transactions.map(tx=>encryptTx(tx,key)));
         }
-        await userDbRef.set({transactions:txToWrite,currency:activeCurrency.code});
+        await userDbRef.set({transactions:txToWrite,currency:activeCurrency.code,customCategories});
         setSyncDot('ok');
       }catch(e){setSyncDot('ok');}
     },800);
@@ -7912,4 +7916,4 @@ window.clearPlanPage = function() {
 
 </script>
 </body>
-</html>
+          </html>
