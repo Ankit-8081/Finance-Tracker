@@ -3,7 +3,7 @@
 //   - CDN assets               → stale-while-revalidate
 //   - Firebase / auth / DB     → network-only (never cache tokens)
 
-const SW_VERSION  = 'ft-v2.0';
+const SW_VERSION  = 'ft-v2.2';
 const SHELL_CACHE = SW_VERSION + '-shell';
 const CDN_CACHE   = SW_VERSION + '-cdn';
 
