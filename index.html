@@ -2088,6 +2088,7 @@
     .user-menu-item.danger:hover{background:rgba(255,94,126,.1)}
     .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-left:2px;vertical-align:middle}
     .sync-dot.syncing{background:#fbbf24;animation:pulse 1s ease-in-out infinite}
+    .sync-dot.error{background:#ff5e7e;animation:pulse 1s ease-in-out infinite}
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
     .cat-atm{background:rgba(251,191,36,.15);color:#fbbf24}
     .cat-cash{background:rgba(132,204,22,.15);color:#84cc16}
@@ -2558,6 +2559,16 @@
   <div class="logo">💸 FinanceTracker</div>
   <div class="header-right">
     <!-- Planner nav button -->
+    <button id="btn-analytics-nav" onclick="toggleAnalytics()" title="Analytics" style="
+      padding:8px 18px; border-radius:20px; border:1px solid rgba(79,158,255,.4);
+      background:rgba(79,158,255,.1); color:#4f9eff;
+      font-family:'Outfit',sans-serif; font-size:.82rem; font-weight:700;
+      cursor:pointer; transition:all .2s; display:flex; align-items:center; gap:7px;
+      letter-spacing:.2px;
+    " onmouseover="this.style.background='rgba(79,158,255,.22)';this.style.borderColor='#4f9eff';this.style.color='#fff'"
+       onmouseout="this.style.background='rgba(79,158,255,.1)';this.style.borderColor='rgba(79,158,255,.4)';this.style.color='#4f9eff'">
+      <span>&#128202; Analytics</span>
+    </button>
     <button id="btn-planner-nav" onclick="togglePlannerNav()" title="Toggle Planner" style="
       padding:8px 18px; border-radius:20px; border:1px solid rgba(167,139,250,.4);
       background:rgba(167,139,250,.1); color:#c4b5fd;
@@ -2776,6 +2787,133 @@
     <div id="pie-empty" style="display:none;text-align:center;padding:44px 0;color:var(--muted);font-size:.9rem;">
       <div style="font-size:2rem;margin-bottom:8px;opacity:.4;">💸</div>No data for selected period
     </div>
+  </div>
+
+  <!-- ===== ANALYTICS PAGE ===== -->
+  <div id="analytics-section" style="display:none;">
+
+    <!-- Nav back -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+      <button onclick="closeAnalytics()" style="padding:8px 18px;border-radius:20px;border:1px solid rgba(79,158,255,.4);background:rgba(79,158,255,.1);color:#4f9eff;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;">&#8592; Back</button>
+      <div style="font-family:'Outfit',sans-serif;font-size:1.3rem;font-weight:900;color:#fff;">&#128202; Analytics</div>
+    </div>
+
+    <!-- 1. Monthly Spending Trends -->
+    <div class="panel" style="margin-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#4f9eff,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 4px 16px rgba(79,158,255,.4);">&#128200;</div>
+          <div>
+            <div style="font-size:1rem;font-weight:900;color:#fff;">Monthly Spending Trends</div>
+            <div style="font-size:.72rem;color:rgba(160,185,220,.7);">Income vs Expenses — pick a date range</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div style="display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:4px;">
+            <button id="trend-btn-6"  onclick="setTrendPreset(6)"  style="padding:5px 14px;border-radius:20px;border:none;background:linear-gradient(135deg,#4f9eff,#a78bfa);color:#fff;font-size:.74rem;font-weight:800;font-family:'Outfit',sans-serif;cursor:pointer;">6M</button>
+            <button id="trend-btn-12" onclick="setTrendPreset(12)" style="padding:5px 14px;border-radius:20px;border:none;background:transparent;color:rgba(160,185,220,.65);font-size:.74rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;">12M</button>
+            <button id="trend-btn-all" onclick="setTrendPreset(0)" style="padding:5px 14px;border-radius:20px;border:none;background:transparent;color:rgba(160,185,220,.65);font-size:.74rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;">All</button>
+          </div>
+          <input type="date" id="trend-from" onchange="renderTrendChart()" style="background:#0d1627;border:1px solid rgba(79,158,255,.3);border-radius:8px;color:#c8d4e8;padding:5px 9px;font-size:.78rem;font-family:'Outfit',sans-serif;">
+          <span style="color:var(--muted);font-size:.82rem;">→</span>
+          <input type="date" id="trend-to" onchange="renderTrendChart()" style="background:#0d1627;border:1px solid rgba(79,158,255,.3);border-radius:8px;color:#c8d4e8;padding:5px 9px;font-size:.78rem;font-family:'Outfit',sans-serif;">
+        </div>
+      </div>
+      <div style="position:relative;height:260px;">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 2. Day-of-Week Heatmap -->
+    <div class="panel" style="margin-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 4px 16px rgba(245,158,11,.4);">&#128293;</div>
+          <div>
+            <div style="font-size:1rem;font-weight:900;color:#fff;">Day-of-Week Spending</div>
+            <div style="font-size:.72rem;color:rgba(160,185,220,.7);">When do you spend the most?</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div style="display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:4px;">
+            <button id="heat-btn-30"  onclick="setHeatPreset(30)"  style="padding:5px 14px;border-radius:20px;border:none;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;font-size:.74rem;font-weight:800;font-family:'Outfit',sans-serif;cursor:pointer;">30D</button>
+            <button id="heat-btn-90"  onclick="setHeatPreset(90)"  style="padding:5px 14px;border-radius:20px;border:none;background:transparent;color:rgba(160,185,220,.65);font-size:.74rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;">3M</button>
+            <button id="heat-btn-all" onclick="setHeatPreset(0)"   style="padding:5px 14px;border-radius:20px;border:none;background:transparent;color:rgba(160,185,220,.65);font-size:.74rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;">All</button>
+          </div>
+          <input type="date" id="heat-from" onchange="renderHeatmap()" style="background:#0d1627;border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#c8d4e8;padding:5px 9px;font-size:.78rem;font-family:'Outfit',sans-serif;">
+          <span style="color:var(--muted);font-size:.82rem;">→</span>
+          <input type="date" id="heat-to" onchange="renderHeatmap()" style="background:#0d1627;border:1px solid rgba(245,158,11,.3);border-radius:8px;color:#c8d4e8;padding:5px 9px;font-size:.78rem;font-family:'Outfit',sans-serif;">
+        </div>
+      </div>
+      <div style="position:relative;height:200px;">
+        <canvas id="heatmapChart"></canvas>
+      </div>
+      <div id="heatmap-insight" style="margin-top:14px;padding:12px 16px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;font-size:.82rem;color:rgba(220,200,160,.9);"></div>
+    </div>
+
+    <!-- 3. Month on Month Comparison -->
+    <div class="panel" style="margin-bottom:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#00e5a0,#4f9eff);display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 4px 16px rgba(0,229,160,.4);">&#9878;&#65039;</div>
+          <div>
+            <div style="font-size:1rem;font-weight:900;color:#fff;">Month on Month</div>
+            <div style="font-size:.72rem;color:rgba(160,185,220,.7);" id="compare-subtitle">Continuous income &amp; expense by month</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <button id="mom-btn-3"  onclick="setMoMPreset(3)"  style="border:none;border-radius:7px;padding:5px 10px;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:rgba(160,185,220,.65);">3M</button>
+            <button id="mom-btn-6"  onclick="setMoMPreset(6)"  style="border:none;border-radius:7px;padding:5px 10px;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:rgba(160,185,220,.65);">6M</button>
+            <button id="mom-btn-12" onclick="setMoMPreset(12)" style="border:none;border-radius:7px;padding:5px 10px;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:rgba(160,185,220,.65);">12M</button>
+            <button id="mom-btn-all" onclick="setMoMPreset(0)"  style="border:none;border-radius:7px;padding:5px 10px;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:rgba(160,185,220,.65);">All</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:.65rem;color:rgba(160,185,220,.5);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">From</span>
+              <input type="month" id="compare-month-a" onchange="renderCompareChart()" style="background:#0d1627;border:1px solid rgba(0,229,160,.3);border-radius:8px;color:#c8d4e8;padding:5px 9px;font-size:.78rem;font-family:'Outfit',sans-serif;">
+            </div>
+            <span style="color:var(--muted);font-size:.9rem;margin-top:14px;">→</span>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:.65rem;color:rgba(160,185,220,.5);font-weight:600;text-transform:uppercase;letter-spacing:.5px;">To</span>
+              <input type="month" id="compare-month-b" onchange="renderCompareChart()" style="background:#0d1627;border:1px solid rgba(79,158,255,.3);border-radius:8px;color:#c8d4e8;padding:5px 9px;font-size:.78rem;font-family:'Outfit',sans-serif;">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="compare-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px;"></div>
+      <div style="position:relative;height:280px;">
+        <canvas id="compareChart"></canvas>
+      </div>
+    </div>
+
+    <!-- 4. Net Worth Over Time -->
+    <div class="panel" style="margin-bottom:40px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#a78bfa,#ec4899);display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 4px 16px rgba(167,139,250,.4);">&#128176;</div>
+          <div>
+            <div style="font-size:1rem;font-weight:900;color:#fff;">Net Worth Over Time</div>
+            <div style="font-size:.72rem;color:rgba(160,185,220,.7);">Cumulative income minus expenses</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div style="display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:4px;">
+            <button id="nw-btn-6"   onclick="setNWPreset(6)"   style="padding:5px 14px;border-radius:20px;border:none;background:linear-gradient(135deg,#a78bfa,#ec4899);color:#fff;font-size:.74rem;font-weight:800;font-family:'Outfit',sans-serif;cursor:pointer;">6M</button>
+            <button id="nw-btn-12"  onclick="setNWPreset(12)"  style="padding:5px 14px;border-radius:20px;border:none;background:transparent;color:rgba(160,185,220,.65);font-size:.74rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;">12M</button>
+            <button id="nw-btn-all" onclick="setNWPreset(0)"   style="padding:5px 14px;border-radius:20px;border:none;background:transparent;color:rgba(160,185,220,.65);font-size:.74rem;font-weight:600;font-family:'Outfit',sans-serif;cursor:pointer;">All</button>
+          </div>
+          <input type="date" id="nw-from" onchange="renderNetworthChart()" style="background:#0d1627;border:1px solid rgba(167,139,250,.3);border-radius:8px;color:#c8d4e8;padding:5px 9px;font-size:.78rem;font-family:'Outfit',sans-serif;">
+          <span style="color:var(--muted);font-size:.82rem;">→</span>
+          <input type="date" id="nw-to" onchange="renderNetworthChart()" style="background:#0d1627;border:1px solid rgba(167,139,250,.3);border-radius:8px;color:#c8d4e8;padding:5px 9px;font-size:.78rem;font-family:'Outfit',sans-serif;">
+        </div>
+      </div>
+      <div id="networth-summary" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:20px;"></div>
+      <div style="position:relative;height:260px;">
+        <canvas id="networthChart"></canvas>
+      </div>
+    </div>
+
   </div>
 
   <!-- Transaction List -->
@@ -3249,7 +3387,7 @@
     <div class="planner-bar-card" id="pg-bar-card" style="display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <span style="font-size:.8rem;font-weight:700;color:var(--muted);" id="pg-bar-lbl">Budget Usage</span>
-        <span style="font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:800;" id="pg-bar-pct" style="color:#a78bfa;"></span>
+        <span style="font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:800;color:#a78bfa;" id="pg-bar-pct"></span>
       </div>
       <div class="planner-bar-track">
         <div id="planner-prog-bar"></div>
@@ -3438,7 +3576,7 @@
     { code:'UGX', name:'Ugandan Shilling',        symbol:'Sh', flag:'🇺🇬' },
     { code:'USD', name:'US Dollar',               symbol:'$',  flag:'🇺🇸' },
     { code:'UYU', name:'Uruguayan Peso',          symbol:'$',  flag:'🇺🇾' },
-    { code:'UZS', name:'Uzbekistani Som',         symbol:'лв', flag:'🇺🇿' },
+    { code:'UZS', name:'Uzbekistani Som',         symbol:'soʻm', flag:'🇺🇿' },
     { code:'VES', name:'Venezuelan Bolívar',      symbol:'Bs.', flag:'🇻🇪' },
     { code:'VND', name:'Vietnamese Dong',         symbol:'₫',  flag:'🇻🇳' },
     { code:'VUV', name:'Vanuatu Vatu',            symbol:'Vt', flag:'🇻🇺' },
@@ -3717,14 +3855,22 @@
   function deleteCustomCategory(key) {
     const cat = customCategories[key];
     if (!cat) return;
-    if (!confirm(`Delete category "${cat.icon} ${cat.label}"?\n\nExisting transactions with this category will be moved to Other.`)) return;
-    // Reassign all transactions using this category to 'other'
+    if (!confirm(`Delete category "${cat.icon} ${cat.label}"?\n\nExisting transactions will be moved to Other.`)) return;
+    // Reassign all transactions using this category key to 'other'
     let reassigned = 0;
     transactions.forEach(t => { if (t.cat === key) { t.cat = 'other'; reassigned++; } });
+    // Remove from customCategories and rebuild catMeta
     delete customCategories[key];
     applyCustomCategories();
+    // Persist BOTH the updated transactions AND the updated customCategories to Firebase
+    // saveCustomCategories uses update() but save() does a full set() — call both so
+    // nothing gets overwritten by the debounce
     saveCustomCategories();
-    renderAll();
+    if (reassigned > 0) {
+      save(); // persists reassigned transactions + customCategories in one atomic write
+    } else {
+      renderAll(); // no tx changes, just re-render
+    }
     renderCatManagerModal();
     toast(`🗑 Category deleted` + (reassigned > 0 ? ` · ${reassigned} transaction${reassigned > 1 ? 's' : ''} moved to Other` : ''));
   }
@@ -4327,20 +4473,7 @@
     }
   })();
 
-  // FIX 3: save() has the offline guard built-in — no fragile monkey-patch.
-  // Renders immediately, persists to localStorage when offline, syncs to Firebase when online.
-  // ── Migrate legacy transactions that have no source field ──
-  // Transactions saved before this feature existed are treated as 'manual'
-  // so existing users keep their delete buttons.
-  (function migrateTransactionSource() {
-    let changed = false;
-    transactions.forEach(t => { if (!t.source) { t.source = 'manual'; changed = true; } });
-    if (changed) {
-      try { localStorage.setItem('ftTransactions', JSON.stringify(transactions)); } catch(e) {}
-    }
-  })();
-
-    async function save(){
+  async function save(){
     renderAll();
     // Offline guard — persist locally and mark dirty for later sync
     if (!navigator.onLine) {
@@ -4366,10 +4499,20 @@
         }
         await userDbRef.set({transactions:txToWrite,currency:activeCurrency.code,customCategories});
         setSyncDot('ok');
-      }catch(e){setSyncDot('ok');}
+      }catch(e){
+        setSyncDot('error');
+        console.error('[save] Firebase sync failed:', e);
+        toast('⚠️ Sync failed — changes saved locally, will retry on reconnect');
+      }
     },800);
   }
-  function setSyncDot(s){const d=document.getElementById('sync-dot');if(!d)return;d.className='sync-dot'+(s==='syncing'?' syncing':'');d.title=s==='syncing'?'Saving…':'All changes saved ✓';}
+  function setSyncDot(s){
+    const d=document.getElementById('sync-dot');
+    if(!d)return;
+    if(s==='syncing'){ d.className='sync-dot syncing'; d.title='Saving…'; }
+    else if(s==='error'){ d.className='sync-dot error'; d.title='Sync failed — will retry'; }
+    else { d.className='sync-dot'; d.title='All changes saved ✓'; }
+  }
 
   function renderAll() {
     renderStats();
@@ -5083,7 +5226,14 @@
 
   function parseAmount(str) {
     if (!str && str !== 0) return 0;
-    const n = parseFloat(String(str).replace(/[₹,\s"]/g,'').replace(/(CR|DR)$/i,'').trim());
+    // Strip any currency symbol, thousands separators, whitespace and quotes,
+    // then remove trailing CR/DR debit/credit suffixes common in bank exports.
+    const n = parseFloat(
+      String(str)
+        .replace(/[₹$€£¥₩₺₴₫₭₮₱฿₲₡₵₦₼₾₸؋֏лвKzB\$C\$A\$S\$R\$BZ\$CA\$NZ\$HK\$T\$,\s"']/g, '')
+        .replace(/(CR|DR)$/i, '')
+        .trim()
+    );
     return isNaN(n) ? 0 : n;
   }
 
@@ -7372,7 +7522,8 @@ window.sendAIMessage = async function() {
 
   aiHistory.push({ role: 'user', content: userContent });
 
-  const hadImage = !!aiPendingImage;
+  // Capture the image reference BEFORE clearing, so the Gemini request can use it
+  const capturedImage = aiPendingImage;
   removeAIImage();
 
   setAILoading(true);
@@ -7393,8 +7544,8 @@ window.sendAIMessage = async function() {
 
     // Current user turn — text + optional image
     const currentParts = [];
-    if (aiPendingImage) {
-      currentParts.push({ inlineData: { mimeType: aiPendingImage.mimeType, data: aiPendingImage.data } });
+    if (capturedImage) {
+      currentParts.push({ inlineData: { mimeType: capturedImage.mimeType, data: capturedImage.data } });
     }
     currentParts.push({ text: userText });
     contents.push({ role: 'user', parts: currentParts });
@@ -7473,7 +7624,7 @@ function showAIActionPreview(ops) {
       card.style.borderLeftColor = '#a78bfa';
       // Emoji picker row
       const emojiButtons = (op.emoji_options || ['🏷️']).map((em) =>
-        '<button onclick="aiPickEmoji(\''+i+'\',\''+em+'\')" style="font-size:1.5rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;cursor:pointer;padding:5px 9px;transition:all .15s;margin:2px;" title="'+em+'">'+em+'</button>'
+        '<button onclick="aiPickEmoji(\''+i+'\',\''+em+'\',event)" style="font-size:1.5rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;cursor:pointer;padding:5px 9px;transition:all .15s;margin:2px;" title="'+em+'">'+em+'</button>'
       ).join('');
       card.innerHTML =
         '<div style="flex:1">' +
@@ -7482,7 +7633,7 @@ function showAIActionPreview(ops) {
           '<div style="margin-top:8px;display:flex;align-items:center;gap:6px;">' +
             '<input id="ai-emoji-custom-'+i+'" placeholder="✏️ type any emoji" maxlength="4" ' +
               'style="width:120px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--text);font-size:1.1rem;padding:5px 8px;outline:none;text-align:center;" ' +
-              'oninput="aiPickEmoji(\''+i+'\', this.value)" />' +
+              'oninput="aiPickEmoji(\''+i+'\', this.value, null)" />' +
             '<span style="font-size:.75rem;color:var(--muted);">or type your own</span>' +
           '</div>' +
           '<div id="ai-emoji-picked-'+i+'" style="font-size:.8rem;color:#a78bfa;margin-top:4px;display:none;"></div>' +
@@ -7625,7 +7776,7 @@ window.confirmAIActions = async function() {
 };
 
 // ── Emoji picker for create_category op ──────────────────────────
-window.aiPickEmoji = function(opIndex, emoji) {
+window.aiPickEmoji = function(opIndex, emoji, evt) {
   if (!window._aiPendingOps) return;
   const op = window._aiPendingOps[opIndex];
   if (!op || !emoji || !emoji.trim()) return;
@@ -7633,13 +7784,13 @@ window.aiPickEmoji = function(opIndex, emoji) {
 
   // Visual feedback on suggestion buttons
   const wrap = document.getElementById('ai-action-preview-wrap');
-  if (wrap && event && event.target && event.target.tagName === 'BUTTON') {
+  if (wrap && evt && evt.target && evt.target.tagName === 'BUTTON') {
     wrap.querySelectorAll('button[title]').forEach(b => {
       b.style.background = 'rgba(255,255,255,.06)';
       b.style.borderColor = 'rgba(255,255,255,.12)';
     });
-    event.target.style.background = 'rgba(167,139,250,.35)';
-    event.target.style.borderColor = '#a78bfa';
+    evt.target.style.background = 'rgba(167,139,250,.35)';
+    evt.target.style.borderColor = '#a78bfa';
     // Clear the custom input if a button was clicked
     const customInput = document.getElementById('ai-emoji-custom-' + opIndex);
     if (customInput) customInput.value = '';
@@ -7914,6 +8065,476 @@ window.clearPlanPage = function() {
 };
 
 
+// ======================================================
+// ANALYTICS — 4 charts
+// ======================================================
+(function() {
+
+  let trendChartInst = null;
+  let heatmapInst    = null;
+  let compareInst    = null;
+  let networthInst   = null;
+
+  // ── helpers ──
+  function toYMD(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+  function toYM(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }
+  function daysAgo(n) {
+    const d = new Date(); d.setDate(d.getDate() - n); return d;
+  }
+  function monthsAgo(n) {
+    const d = new Date(); d.setMonth(d.getMonth() - n); return d;
+  }
+
+  function fmtShort(v) {
+    const sym = activeCurrency.symbol;
+    if (v >= 10000000) return sym + (v/10000000).toFixed(1) + 'Cr';
+    if (v >= 100000)   return sym + (v/100000).toFixed(1) + 'L';
+    if (v >= 1000)     return sym + (v/1000).toFixed(1) + 'k';
+    return sym + Math.round(v).toLocaleString('en-IN');
+  }
+  function monthLabel(str) {
+    const [y, m] = str.split('-');
+    return new Date(y, m-1).toLocaleDateString('en-US', {month:'short', year:'2-digit'});
+  }
+
+  const SCALE_OPTS = {
+    x: { grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#7a8aa0', font:{family:'Plus Jakarta Sans',size:11} } },
+    y: { grid:{ color:'rgba(255,255,255,0.04)' }, ticks:{ color:'#7a8aa0', font:{family:'Plus Jakarta Sans',size:11}, callback: v => fmtShort(v) } }
+  };
+  const LEGEND_OPTS = { labels:{ color:'#7a8aa0', font:{family:'Plus Jakarta Sans',size:12}, usePointStyle:true } };
+  const TT_OPTS = { backgroundColor:'#1a2236', borderColor:'rgba(255,255,255,.1)', borderWidth:1, titleColor:'#e8edf5', bodyColor:'#7a8aa0', padding:12 };
+
+  function setPresetBtn(group, active, gradFrom, gradTo) {
+    const btns = document.querySelectorAll(`[id^="${group}-btn-"]`);
+    btns.forEach(b => {
+      const isActive = b.id === `${group}-btn-${active}`;
+      b.style.background = isActive ? `linear-gradient(135deg,${gradFrom},${gradTo})` : 'transparent';
+      b.style.color      = isActive ? '#fff' : 'rgba(160,185,220,.65)';
+      b.style.fontWeight = isActive ? '800' : '600';
+    });
+  }
+
+  // ── 1. Trend Chart ──
+  function getMonthsBetween(from, to) {
+    const months = [];
+    const cur = new Date(from.getFullYear(), from.getMonth(), 1);
+    const end = new Date(to.getFullYear(),   to.getMonth(),   1);
+    while (cur <= end) {
+      months.push(toYM(cur));
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    return months;
+  }
+
+  function sumMonth(monthStr, type) {
+    const from = document.getElementById('trend-from')?.value || '';
+    const to   = document.getElementById('trend-to')?.value   || '';
+    return transactions
+      .filter(t => {
+        if (t.type !== type) return false;
+        if (type === 'income' && t.cat === 'cash') return false;
+        if (!t.date.startsWith(monthStr)) return false;
+        // Only clamp by date within the month if custom dates overlap
+        if (from && t.date < from) return false;
+        if (to   && t.date > to)   return false;
+        return true;
+      })
+      .reduce((s, t) => s + t.amount, 0);
+  }
+
+  window.renderTrendChart = function() {
+    const canvas = document.getElementById('trendChart');
+    if (!canvas) return;
+    const fromVal = document.getElementById('trend-from')?.value;
+    const toVal   = document.getElementById('trend-to')?.value;
+    const from = fromVal ? new Date(fromVal) : monthsAgo(5);
+    const to   = toVal   ? new Date(toVal)   : new Date();
+    const months  = getMonthsBetween(from, to);
+    const income  = months.map(m => sumMonth(m, 'income'));
+    const expense = months.map(m => sumMonth(m, 'expense'));
+    const labels  = months.map(monthLabel);
+    if (trendChartInst) trendChartInst.destroy();
+    const ctx = canvas.getContext('2d');
+    const gI = ctx.createLinearGradient(0,0,0,260); gI.addColorStop(0,'rgba(0,229,160,.35)'); gI.addColorStop(1,'rgba(0,229,160,.02)');
+    const gE = ctx.createLinearGradient(0,0,0,260); gE.addColorStop(0,'rgba(255,94,126,.35)'); gE.addColorStop(1,'rgba(255,94,126,.02)');
+    trendChartInst = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [
+        { label:'Income',  data:income,  borderColor:'#00e5a0', backgroundColor:gI, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#00e5a0', tension:.4, fill:true },
+        { label:'Expense', data:expense, borderColor:'#ff5e7e', backgroundColor:gE, borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#ff5e7e', tension:.4, fill:true }
+      ]},
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        interaction:{ mode:'index', intersect:false },
+        plugins:{ legend:LEGEND_OPTS, tooltip:{ ...TT_OPTS, callbacks:{ label: c => ` ${c.dataset.label}: ${fmtShort(c.parsed.y)}` } } },
+        scales: SCALE_OPTS
+      }
+    });
+  };
+
+  window.setTrendPreset = function(n) {
+    const now  = new Date();
+    const from = n === 0 ? null : monthsAgo(n - 1);
+    const fi = document.getElementById('trend-from');
+    const ti = document.getElementById('trend-to');
+    if (fi) fi.value = from ? toYMD(new Date(from.getFullYear(), from.getMonth(), 1)) : '';
+    if (ti) ti.value = toYMD(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+    const key = n === 0 ? 'all' : String(n);
+    setPresetBtn('trend', key, '#4f9eff', '#a78bfa');
+    renderTrendChart();
+  };
+  // keep old name working
+  window.setTrendMonths = window.setTrendPreset;
+
+  // ── 2. Heatmap ──
+  window.renderHeatmap = function() {
+    const canvas = document.getElementById('heatmapChart');
+    if (!canvas) return;
+    const fromVal = document.getElementById('heat-from')?.value || '';
+    const toVal   = document.getElementById('heat-to')?.value   || '';
+    const days   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const totals = [0,0,0,0,0,0,0];
+    const counts = [0,0,0,0,0,0,0];
+    transactions.filter(t => {
+      if (t.type !== 'expense') return false;
+      if (fromVal && t.date < fromVal) return false;
+      if (toVal   && t.date > toVal)   return false;
+      return true;
+    }).forEach(t => {
+      const dow = new Date(t.date + 'T00:00:00').getDay();
+      totals[dow] += t.amount;
+      counts[dow]++;
+    });
+    const maxVal = Math.max(...totals, 1);
+    const bgColors     = totals.map(v => `rgba(255,94,126,${(0.15 + (v/maxVal)*0.75).toFixed(2)})`);
+    const borderColors = totals.map(v => `rgba(255,94,126,${(0.4  + (v/maxVal)*0.6 ).toFixed(2)})`);
+    if (heatmapInst) heatmapInst.destroy();
+    const ctx = canvas.getContext('2d');
+    heatmapInst = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: days.map(d=>d.slice(0,3)), datasets: [{
+        label:'Total Spent', data:totals,
+        backgroundColor:bgColors, borderColor:borderColors, borderWidth:1, borderRadius:8, borderSkipped:false
+      }]},
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ ...TT_OPTS, callbacks:{
+          title: items => days[items[0].dataIndex],
+          label: c => [` Total: ${fmtShort(c.parsed.y)}`, ` Transactions: ${counts[c.dataIndex]}`]
+        }}},
+        scales: SCALE_OPTS
+      }
+    });
+    const insightEl = document.getElementById('heatmap-insight');
+    if (insightEl) {
+      const total = totals.reduce((a,b)=>a+b,0);
+      if (total === 0) { insightEl.textContent = 'No expense data for this range.'; return; }
+      const maxDay  = totals.indexOf(maxVal);
+      const nonZero = totals.filter(v=>v>0);
+      const minVal  = Math.min(...nonZero);
+      const minDay  = totals.indexOf(minVal);
+      const wkdPct  = Math.round(((totals[0]+totals[6])/total)*100);
+      insightEl.innerHTML = `<strong>${days[maxDay]}</strong> is your highest spending day (${fmtShort(maxVal)}).`
+        + (nonZero.length > 1 ? ` <strong>${days[minDay]}</strong> is your most frugal.` : '')
+        + ` Weekends = <strong>${wkdPct}%</strong> of total spending.`;
+    }
+  };
+
+  window.setHeatPreset = function(n) {
+    const now  = new Date();
+    const from = n === 0 ? null : daysAgo(n);
+    const fi = document.getElementById('heat-from');
+    const ti = document.getElementById('heat-to');
+    if (fi) fi.value = from ? toYMD(from) : '';
+    if (ti) ti.value = toYMD(now);
+    const key = n === 0 ? 'all' : String(n);
+    setPresetBtn('heat', key, '#f59e0b', '#ef4444');
+    renderHeatmap();
+  };
+
+  // ── 3. Month on Month (continuous bar chart across a date range) ──
+  function sumMonthRaw(monthStr, type) {
+    return transactions
+      .filter(t => t.type === type && t.date.startsWith(monthStr) && !(type === 'income' && t.cat === 'cash'))
+      .reduce((s, t) => s + t.amount, 0);
+  }
+
+  window.renderCompareChart = function() {
+    const canvas = document.getElementById('compareChart');
+    if (!canvas) return;
+
+    const now  = new Date();
+    const mAVal = document.getElementById('compare-month-a')?.value || toYM(monthsAgo(5));
+    const mBVal = document.getElementById('compare-month-b')?.value || toYM(now);
+
+    // Build continuous list of months from mAVal → mBVal
+    const fromDate = new Date(mAVal + '-01');
+    const toDate   = new Date(mBVal + '-01');
+    // Ensure from <= to
+    if (fromDate > toDate) {
+      document.getElementById('compare-month-a').value = mBVal;
+      document.getElementById('compare-month-b').value = mAVal;
+      renderCompareChart();
+      return;
+    }
+
+    const months = getMonthsBetween(fromDate, toDate);
+    const incomeData  = months.map(m => sumMonthRaw(m, 'income'));
+    const expenseData = months.map(m => sumMonthRaw(m, 'expense'));
+    const labels      = months.map(monthLabel);
+
+    // Update subtitle
+    const subEl = document.getElementById('compare-subtitle');
+    const labelA = fromDate.toLocaleDateString('en-US', {month:'short', year:'numeric'});
+    const labelB = toDate.toLocaleDateString('en-US',   {month:'short', year:'numeric'});
+    if (subEl) subEl.textContent = months.length === 1
+      ? labelA
+      : labelA + ' → ' + labelB + ' (' + months.length + ' months)';
+
+    // Summary cards
+    const totalInc  = incomeData.reduce((a, b) => a + b, 0);
+    const totalExp  = expenseData.reduce((a, b) => a + b, 0);
+    const netSaving = totalInc - totalExp;
+    const avgInc    = months.length ? totalInc  / months.length : 0;
+    const avgExp    = months.length ? totalExp / months.length : 0;
+
+    // Best income month & highest expense month
+    const maxIncIdx = incomeData.indexOf(Math.max(...incomeData));
+    const maxExpIdx = expenseData.indexOf(Math.max(...expenseData));
+
+    const cardsEl = document.getElementById('compare-cards');
+    if (cardsEl) cardsEl.innerHTML = [
+      { label:'Total Income',    val: fmtShort(totalInc),          clr:'#00e5a0', sub: 'across ' + months.length + ' month' + (months.length!==1?'s':'') },
+      { label:'Total Expenses',  val: fmtShort(totalExp),          clr:'#ff5e7e', sub: 'across ' + months.length + ' month' + (months.length!==1?'s':'') },
+      { label:'Net Savings',     val: fmtShort(Math.abs(netSaving)), clr: netSaving>=0?'#00e5a0':'#ff5e7e', sub: netSaving>=0 ? '🟢 Surplus' : '🔴 Deficit' },
+      { label:'Avg / Month',     val: fmtShort(avgInc),            clr:'#4f9eff', sub: 'income · ' + fmtShort(avgExp) + ' expense' },
+      { label:'Best Income',     val: months.length ? labels[maxIncIdx] : '—', clr:'#a78bfa', sub: months.length ? fmtShort(incomeData[maxIncIdx]) : '' },
+      { label:'Peak Expense',    val: months.length ? labels[maxExpIdx] : '—', clr:'#fb923c', sub: months.length ? fmtShort(expenseData[maxExpIdx]) : '' },
+    ].map(c => `<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
+      <div style="font-size:.7rem;color:rgba(160,185,220,.6);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">${c.label}</div>
+      <div style="font-size:1.1rem;font-weight:900;color:#fff;">${c.val}</div>
+      <div style="font-size:.72rem;color:${c.clr};font-weight:700;margin-top:4px;opacity:.9;">${c.sub}</div>
+    </div>`).join('');
+
+    if (compareInst) compareInst.destroy();
+    const ctx = canvas.getContext('2d');
+    compareInst = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Income',
+            data: incomeData,
+            backgroundColor: 'rgba(0,229,160,0.7)',
+            borderColor: 'rgba(0,229,160,0.9)',
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+          },
+          {
+            label: 'Expense',
+            data: expenseData,
+            backgroundColor: 'rgba(255,94,126,0.7)',
+            borderColor: 'rgba(255,94,126,0.9)',
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: LEGEND_OPTS,
+          tooltip: {
+            ...TT_OPTS,
+            callbacks: {
+              label: c => ` ${c.dataset.label}: ${fmtShort(c.parsed.y)}`,
+              afterBody: items => {
+                const i = items[0]?.dataIndex;
+                if (i == null) return;
+                const net = incomeData[i] - expenseData[i];
+                return [``, ` Net: ${net >= 0 ? '+' : ''}${fmtShort(net)}`];
+              }
+            }
+          }
+        },
+        scales: SCALE_OPTS
+      }
+    });
+  };
+
+  window.setMoMPreset = function(n) {
+    const now  = new Date();
+    const from = n === 0 ? null : new Date(now.getFullYear(), now.getMonth() - (n - 1), 1);
+    const fi = document.getElementById('compare-month-a');
+    const ti = document.getElementById('compare-month-b');
+    if (fi) fi.value = from ? toYM(from) : toYM(new Date(transactions.length
+      ? transactions.reduce((a, t) => t.date < a ? t.date : a, transactions[0].date).slice(0, 7) + '-01'
+      : new Date(now.getFullYear(), now.getMonth() - 11, 1)));
+    if (ti) ti.value = toYM(now);
+    // If "All" — find earliest transaction month
+    if (n === 0 && transactions.length) {
+      const earliest = transactions.map(t => t.date.slice(0,7)).sort()[0];
+      if (fi) fi.value = earliest;
+    }
+    const key = n === 0 ? 'all' : String(n);
+    setPresetBtn('mom', key, '#00e5a0', '#4f9eff');
+    renderCompareChart();
+  };
+
+  // ── 4. Net Worth Over Time ──
+  window.renderNetworthChart = function() {
+    const canvas = document.getElementById('networthChart');
+    if (!canvas) return;
+    const fromVal = document.getElementById('nw-from')?.value || '';
+    const toVal   = document.getElementById('nw-to')?.value   || '';
+
+    // Collect all unique months in range, sorted
+    const seen = new Set();
+    transactions.forEach(t => {
+      if (fromVal && t.date < fromVal.slice(0,7)+'-01') return;
+      if (toVal   && t.date > toVal) return;
+      seen.add(t.date.slice(0,7));
+    });
+    let months = Array.from(seen).sort();
+    if (!months.length) {
+      // fallback: last 12 months
+      const now = new Date();
+      for (let i=11;i>=0;i--) {
+        const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+        months.push(toYM(d));
+      }
+    }
+
+    // For net worth, use sumMonthRaw (not date-filtered within month) but restrict months to range
+    let running = 0;
+    const netData = months.map(m => {
+      const inc = transactions.filter(t => t.type==='income' && t.cat!=='cash' && t.date.startsWith(m) && (!fromVal||t.date>=fromVal) && (!toVal||t.date<=toVal)).reduce((s,t)=>s+t.amount,0);
+      const exp = transactions.filter(t => t.type==='expense' && t.date.startsWith(m) && (!fromVal||t.date>=fromVal) && (!toVal||t.date<=toVal)).reduce((s,t)=>s+t.amount,0);
+      running += inc - exp;
+      return running;
+    });
+    const labels = months.map(monthLabel);
+
+    const curNW  = netData[netData.length-1] || 0;
+    const prevNW = netData.length > 1 ? netData[netData.length-2] : 0;
+    const mDiff  = curNW - prevNW;
+    const allInc = transactions.filter(t=>t.type==='income'&&t.cat!=='cash'&&(!fromVal||t.date>=fromVal)&&(!toVal||t.date<=toVal)).reduce((s,t)=>s+t.amount,0);
+    const allExp = transactions.filter(t=>t.type==='expense'&&(!fromVal||t.date>=fromVal)&&(!toVal||t.date<=toVal)).reduce((s,t)=>s+t.amount,0);
+
+    const summaryEl = document.getElementById('networth-summary');
+    if (summaryEl) summaryEl.innerHTML = [
+      { label:'Net Worth',           val:fmtShort(Math.abs(curNW)), clr:curNW>=0?'#00e5a0':'#ff5e7e', sub:curNW>=0?'&#128994; Positive':'&#128308; Negative' },
+      { label:'Last Month Change',   val:fmtShort(Math.abs(mDiff)), clr:mDiff>=0?'#00e5a0':'#ff5e7e', sub:(mDiff>=0?'&#8593;':'&#8595;')+' vs prev month' },
+      { label:'Total Income',        val:fmtShort(allInc),          clr:'#00e5a0', sub:'&#128176; in range' },
+      { label:'Total Expenses',      val:fmtShort(allExp),          clr:'#ff5e7e', sub:'&#128722; in range' },
+    ].map(c => `<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
+      <div style="font-size:.7rem;color:rgba(160,185,220,.6);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">${c.label}</div>
+      <div style="font-size:1.2rem;font-weight:900;color:${c.clr};">${c.val}</div>
+      <div style="font-size:.75rem;color:${c.clr};font-weight:700;margin-top:4px;opacity:.8;">${c.sub}</div>
+    </div>`).join('');
+
+    if (networthInst) networthInst.destroy();
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,0,260);
+    grad.addColorStop(0,'rgba(167,139,250,.4)'); grad.addColorStop(1,'rgba(167,139,250,.02)');
+    networthInst = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{
+        label:'Net Worth', data:netData,
+        borderColor:'#a78bfa', backgroundColor:grad, borderWidth:2.5,
+        pointRadius:4, pointBackgroundColor:'#a78bfa', tension:.4, fill:true
+      }]},
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ ...TT_OPTS, callbacks:{ label: c => ` Net Worth: ${fmtShort(c.parsed.y)}` } } },
+        scales: SCALE_OPTS
+      }
+    });
+  };
+
+  window.setNWPreset = function(n) {
+    const now  = new Date();
+    const from = n === 0 ? null : monthsAgo(n - 1);
+    const fi = document.getElementById('nw-from');
+    const ti = document.getElementById('nw-to');
+    if (fi) fi.value = from ? toYMD(new Date(from.getFullYear(), from.getMonth(), 1)) : '';
+    if (ti) ti.value = toYMD(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+    const key = n === 0 ? 'all' : String(n);
+    setPresetBtn('nw', key, '#a78bfa', '#ec4899');
+    renderNetworthChart();
+  };
+
+  // ── open / close ──
+  window.toggleAnalytics = function() {
+    const sec = document.getElementById('analytics-section');
+    const btn = document.getElementById('btn-analytics-nav');
+    if (!sec) return;
+    const opening = sec.style.display === 'none' || sec.style.display === '';
+    if (opening) {
+      document.querySelectorAll('main > *').forEach(el => {
+        el.style.display = el.id === 'analytics-section' ? 'block' : 'none';
+      });
+      const pl = document.getElementById('planner-page');
+      if (pl) pl.style.display = 'none';
+      if (btn) { btn.style.background='rgba(79,158,255,.25)'; btn.querySelector('span').textContent='\u2190 Dashboard'; }
+      // Init defaults
+      initAnalyticsDefaults();
+      renderTrendChart();
+      renderHeatmap();
+      renderCompareChart();
+      renderNetworthChart();
+    } else {
+      closeAnalytics();
+    }
+  };
+
+  function initAnalyticsDefaults() {
+    const now  = new Date();
+    const nowStr = toYMD(now);
+    // Trend: default 6M
+    const t6from = toYMD(new Date(now.getFullYear(), now.getMonth()-5, 1));
+    const tEOMonth = toYMD(new Date(now.getFullYear(), now.getMonth()+1, 0));
+    const tf = document.getElementById('trend-from'); if(tf && !tf.value) tf.value = t6from;
+    const tt = document.getElementById('trend-to');   if(tt && !tt.value) tt.value = tEOMonth;
+    setPresetBtn('trend','6','#4f9eff','#a78bfa');
+    // Heatmap: default 30D
+    const hf = document.getElementById('heat-from'); if(hf && !hf.value) hf.value = toYMD(daysAgo(30));
+    const ht = document.getElementById('heat-to');   if(ht && !ht.value) ht.value = nowStr;
+    setPresetBtn('heat','30','#f59e0b','#ef4444');
+    // Compare: default 6M range
+    const mom6from = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const ca = document.getElementById('compare-month-a'); if(ca && !ca.value) ca.value = toYM(mom6from);
+    const cb = document.getElementById('compare-month-b'); if(cb && !cb.value) cb.value = toYM(now);
+    setPresetBtn('mom','6','#00e5a0','#4f9eff');
+    // Net worth: default 6M
+    const nf = document.getElementById('nw-from'); if(nf && !nf.value) nf.value = t6from;
+    const nt = document.getElementById('nw-to');   if(nt && !nt.value) nt.value = tEOMonth;
+    setPresetBtn('nw','6','#a78bfa','#ec4899');
+  }
+
+  window.closeAnalytics = function() {
+    const sec = document.getElementById('analytics-section');
+    const btn = document.getElementById('btn-analytics-nav');
+    document.querySelectorAll('main > *').forEach(el => {
+      el.style.display = el.id === 'analytics-section' ? 'none' : '';
+    });
+    if (btn) { btn.style.background='rgba(79,158,255,.1)'; btn.querySelector('span').textContent='\ud83d\udcc8 Analytics'; }
+    [trendChartInst,heatmapInst,compareInst,networthInst].forEach(c => { if(c) c.destroy(); });
+    trendChartInst = heatmapInst = compareInst = networthInst = null;
+  };
+
+})();
+
+
 </script>
 </body>
-          </html>
+</html>
