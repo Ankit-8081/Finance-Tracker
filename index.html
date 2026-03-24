@@ -145,7 +145,6 @@
       backdrop-filter: blur(12px);
       width: 100%;
       min-width: 0;
-      overflow: hidden;
     }
     .logo {
       font-family: 'Outfit', sans-serif;
@@ -163,7 +162,6 @@
       gap: 18px;
       min-width: 0;
       flex-shrink: 1;
-      overflow: hidden;
     }
     .header-date {
       font-size: 0.85rem;
@@ -1336,20 +1334,16 @@
       /* Header: compact, no overflow — shrink to fit screen */
       header { padding: 10px 12px; gap: 6px; width: 100%; }
       .header-date { display: none; }
-      .header-right { gap: 6px; flex-shrink: 1; min-width: 0; overflow: hidden; }
+      .header-right { gap: 6px; flex-shrink: 1; min-width: 0; }
       .logo { font-size: 1rem; flex-shrink: 0; }
 
-      /* Nav buttons: icon + very short label, no overflow */
+      /* Nav buttons: compact but still show icon + label */
       #btn-analytics-nav,
       #btn-planner-nav {
-        padding: 7px 10px !important;
+        padding: 6px 10px !important;
         font-size: 0.72rem !important;
         flex-shrink: 1;
         min-width: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 88px;
       }
 
       /* Currency trigger: smaller */
@@ -2951,23 +2945,84 @@
 
   <!-- Transaction List -->
   <!-- Date Range Filter -->
-  <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--r); padding:18px 24px; margin-bottom:20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-    <span style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:var(--muted); white-space:nowrap;">📅 Date Range</span>
-    <div style="display:flex; gap:6px; flex-wrap:wrap;">
-      <button id="preset-all" class="preset-btn active" onclick="setPreset('all')">All Time</button>
-      <button id="preset-30d" class="preset-btn" onclick="setPreset('30d')">30 Days</button>
-      <button id="preset-3m"  class="preset-btn" onclick="setPreset('3m')">3 Months</button>
-      <button id="preset-6m"  class="preset-btn" onclick="setPreset('6m')">6 Months</button>
-      <button id="preset-1y"  class="preset-btn" onclick="setPreset('1y')">Last 12 Months</button>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:0 24px;margin-bottom:20px;display:flex;align-items:center;gap:0;min-height:58px;">
+
+    <!-- Label -->
+    <span style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);white-space:nowrap;padding-right:18px;border-right:1px solid var(--border);margin-right:18px;display:flex;align-items:center;gap:6px;">&#128197; DATE RANGE</span>
+
+    <!-- Preset pills -->
+    <div style="display:flex;align-items:center;gap:2px;margin-right:18px;">
+      <button id="preset-all"  onclick="setPreset('all')"  class="dr-pill dr-active">All Time</button>
+      <button id="preset-30d" onclick="setPreset('30d')" class="dr-pill">30 Days</button>
+      <button id="preset-3m"  onclick="setPreset('3m')"  class="dr-pill">3 Months</button>
+      <button id="preset-6m"  onclick="setPreset('6m')"  class="dr-pill">6 Months</button>
+      <button id="preset-1y"  onclick="setPreset('1y')"  class="dr-pill">Last 12 Months</button>
     </div>
-    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-      <input type="date" id="date-from" style="flex:1; min-width:120px; max-width:160px; padding:7px 10px; font-size:0.82rem;" onchange="onDateChange()" />
-      <span style="color:var(--muted); font-size:0.85rem;">→</span>
-      <input type="date" id="date-to"   style="flex:1; min-width:120px; max-width:160px; padding:7px 10px; font-size:0.82rem;" onchange="onDateChange()" />
-      <button id="date-clear-btn" onclick="setPreset('all')" style="display:none; background:rgba(255,94,126,0.12); border:1px solid rgba(255,94,126,0.35); color:var(--red); border-radius:7px; padding:7px 12px; font-size:0.78rem; font-weight:700; cursor:pointer;">✕ Clear</button>
+
+    <!-- Date inputs -->
+    <div style="display:flex;align-items:center;gap:10px;margin-right:16px;">
+      <input type="date" id="date-from" onchange="onDateChange()" class="dr-date-input" />
+      <span style="color:var(--muted);font-size:1rem;">&#8594;</span>
+      <input type="date" id="date-to"   onchange="onDateChange()" class="dr-date-input" />
     </div>
-    <span id="date-range-summary" style="font-size:0.8rem; color:var(--muted); margin-left:auto;">Showing <strong>all transactions</strong></span>
+
+    <button id="date-clear-btn" onclick="setPreset('all')" style="display:none;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,94,126,.35);background:transparent;color:var(--red);font-size:.75rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;margin-right:12px;white-space:nowrap;">&#10005; Clear</button>
+
+    <!-- Summary -->
+    <span id="date-range-summary" style="font-size:.82rem;color:var(--muted);margin-left:auto;white-space:nowrap;">Showing <strong style="color:var(--text);">all transactions</strong></span>
   </div>
+
+  <style>
+    .dr-pill {
+      padding: 6px 15px;
+      border-radius: 20px;
+      border: 1.5px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Outfit', sans-serif;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+      line-height: 1;
+    }
+    .dr-pill:hover {
+      color: #c4b5fd;
+    }
+    .dr-active {
+      border-color: rgba(167,139,250,.55) !important;
+      background: rgba(167,139,250,.18) !important;
+      color: #c4b5fd !important;
+      font-weight: 700 !important;
+    }
+    .dr-date-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: .82rem;
+      padding: 7px 10px;
+      outline: none;
+      cursor: pointer;
+      width: 148px;
+      transition: border-color .15s;
+    }
+    .dr-date-input:focus {
+      border-color: rgba(167,139,250,.5);
+    }
+    .dr-date-input::-webkit-calendar-picker-indicator {
+      filter: invert(.5) sepia(1) saturate(.5) hue-rotate(200deg);
+      cursor: pointer;
+    }
+    @media (max-width: 900px) {
+      .dr-date-input { width: 130px; font-size: .78rem !important; }
+    }
+    @media (max-width: 600px) {
+      .dr-date-input { width: 100%; }
+    }
+  </style>
 
   <div class="transactions-panel">
     <div class="tx-header">
@@ -5886,29 +5941,47 @@
   // FIX 5: Duplicate detection uses plaintext desc (transactions[] is always
   // decrypted in memory). We also normalise the desc to lowercase+trimmed so
   // minor whitespace/case differences from re-imports don't create duplicates.
+  // Normalize desc for dedup: lowercase, collapse whitespace, strip punctuation
+  function _dedupKey(t) {
+    const d = (t.desc||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();
+    return `${t.date}|${t.type}|${Number(t.amount).toFixed(2)}|${d}`;
+  }
+
   function confirmImport() {
     if (!parsedImportRows.length) return toast('⚠️ No transactions to import');
     let idBase = Date.now();
     const newTx = parsedImportRows.map(r => ({
-      id: idBase++,          // FIX 5b: integer ids, no Math.random() float
+      id: idBase++,
       type: r.type,
       desc: r.desc,
       amount: r.amount,
       cat: r.cat,
       date: r.date,
-      source: 'import'       // bank statement — cannot be deleted, only recategorised
+      source: 'import'
     }));
-    // Build dedup set from in-memory (plaintext) transactions
-    const existing = new Set(
-      transactions.map(t => `${t.date}|${(t.desc||'').trim().toLowerCase()}|${Number(t.amount).toFixed(2)}`)
-    );
-    const fresh = newTx.filter(t =>
-      !existing.has(`${t.date}|${(t.desc||'').trim().toLowerCase()}|${Number(t.amount).toFixed(2)}`)
-    );
-    transactions = [...fresh, ...transactions];
+
+    // Build a map of existing imported transactions keyed by dedup key
+    // so we can UPDATE their category rather than create duplicates
+    const existingMap = new Map();
+    transactions.forEach(t => existingMap.set(_dedupKey(t), t));
+
+    let added = 0, skipped = 0;
+    newTx.forEach(t => {
+      const key = _dedupKey(t);
+      if (existingMap.has(key)) {
+        // Already exists — skip (preserve user's custom category)
+        skipped++;
+      } else {
+        // Genuinely new transaction — add it
+        transactions.unshift(t);
+        existingMap.set(key, t);
+        added++;
+      }
+    });
+
     save();
     closeImportModal();
-    toast(`🎉 Imported ${fresh.length} transactions! (${newTx.length - fresh.length} duplicates skipped)`);
+    toast(`🎉 Imported ${added} new transaction${added!==1?'s':''}!${skipped>0?' ('+skipped+' duplicates skipped)':''}`);
   }
 
   // ── DATE RANGE ──
@@ -5918,24 +5991,24 @@
     if(p==='30d'){const d=new Date(today);d.setDate(d.getDate()-30);from=fi(d);to=fi(today);}
     else if(p==='3m'){const d=new Date(today);d.setMonth(d.getMonth()-3);from=fi(d);to=fi(today);}
     else if(p==='6m'){const d=new Date(today);d.setMonth(d.getMonth()-6);from=fi(d);to=fi(today);}
-    // FIX 9: rolling 12 months back, not calendar year-to-date
     else if(p==='1y'){const d=new Date(today);d.setFullYear(d.getFullYear()-1);from=fi(d);to=fi(today);}
     document.getElementById('date-from').value=from;
     document.getElementById('date-to').value=to;
     ['30d','3m','6m','1y','all'].forEach(x=>{
       const b=document.getElementById('preset-'+x);
-      if(b){b.classList.toggle('active',x===p);b.classList.toggle('preset-btn',true);}
+      if(!b)return;
+      b.classList.toggle('dr-active', x===p);
     });
     updateDateSummary(from,to);
     renderAll();
   }
-  function onDateChange(){renderPieChart_after_orig();}
-  function renderPieChart_after_orig(){
-    onDateChange_real();
-    renderPieChart();
-  }
-  function onDateChange_real(){
-    ['30d','3m','6m','1y','all'].forEach(p=>{const b=document.getElementById('preset-'+p);if(b)b.classList.remove('active');});
+  function onDateChange(){
+    // Clear all preset active states when user manually picks dates
+    ['30d','3m','6m','1y','all'].forEach(p=>{
+      const b=document.getElementById('preset-'+p);
+      if(!b)return;
+      b.classList.remove('dr-active');
+    });
     const from=document.getElementById('date-from').value, to=document.getElementById('date-to').value;
     updateDateSummary(from,to);
     renderAll();
