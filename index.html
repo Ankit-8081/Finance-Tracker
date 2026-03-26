@@ -1337,15 +1337,31 @@
       .header-right { gap: 6px; flex-shrink: 1; min-width: 0; }
       .logo { font-size: 1rem; flex-shrink: 0; }
 
-      /* Nav buttons: compact but still show icon + label */
+      /* Nav buttons: shortened labels on mobile to prevent overlap */
       #btn-analytics-nav,
       #btn-planner-nav {
-        padding: 6px 10px !important;
-        font-size: 0.72rem !important;
-        flex-shrink: 1;
+        padding: 6px 8px !important;
+        font-size: 0.68rem !important;
+        flex-shrink: 0;
         min-width: 0;
+        white-space: nowrap;
+      }
+      #btn-analytics-nav span {
+        font-size: 0;
+      }
+      #btn-analytics-nav span::before {
+        content: '📊 Stats';
+        font-size: 0.68rem;
+      }
+      #btn-planner-nav span {
+        font-size: 0;
+      }
+      #btn-planner-nav span::before {
+        content: '📋 Plan';
+        font-size: 0.68rem;
       }
 
+      
       /* Currency trigger: smaller */
       .cur-info-name { display: none; }
       .cur-trigger { min-width: 64px; padding: 5px 8px; gap: 5px; flex-shrink: 0; }
