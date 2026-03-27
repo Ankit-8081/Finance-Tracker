@@ -744,6 +744,45 @@
     .btn-add:hover { opacity: 0.9; transform: translateY(-1px); }
     .btn-add:active { transform: translateY(0); }
 
+    /* ── NOTES TEXTAREA ── */
+    #tx-notes {
+      width: 100%;
+      resize: none;
+      height: 60px;
+      padding: 8px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    #tx-notes::placeholder { color: var(--muted); }
+    #tx-notes:focus { outline: none; border-color: var(--blue); }
+
+    /* ── NOTES in transaction list ── */
+    .tx-notes-display {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+      font-style: italic;
+      white-space: normal;
+      word-break: break-word;
+      max-width: 100%;
+      line-height: 1.4;
+    }
+    @media (max-width: 480px) {
+      .tx-notes-display {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 180px;
+      }
+    }
+
     /* ── CHART ── */
     .chart-wrapper {
       position: relative;
@@ -870,6 +909,64 @@
       line-height: 1;
     }
     .btn-delete:hover { background: rgba(255,94,126,0.15); border-color: var(--red); color: var(--red); }
+
+    /* 📝 Note button on tx rows */
+    .btn-note {
+      background: none;
+      border: 1px solid transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 5px 7px;
+      border-radius: 6px;
+      transition: all 0.15s;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .btn-note:hover { background: rgba(79,158,255,0.12); border-color: var(--blue); color: var(--blue); }
+    .btn-note.has-note { color: var(--blue); opacity: 0.9; }
+
+    /* Inline note editor that appears below a tx-item */
+    .tx-note-editor {
+      display: none;
+      padding: 8px 12px 10px;
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+      animation: slideIn 0.15s ease;
+    }
+    .tx-note-editor.open { display: flex; gap: 8px; align-items: flex-end; }
+    .tx-note-editor textarea {
+      flex: 1;
+      resize: none;
+      height: 52px;
+      padding: 7px 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      box-sizing: border-box;
+      transition: border-color 0.2s;
+    }
+    .tx-note-editor textarea::placeholder { color: var(--muted); }
+    .tx-note-editor textarea:focus { outline: none; border-color: var(--blue); }
+    .tx-note-editor-save {
+      padding: 7px 14px;
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+    .tx-note-editor-save:hover { opacity: 0.85; }
 
     /* 🔒 Lock icon for bank-imported transactions */
     .btn-imported {
@@ -1360,6 +1457,9 @@
         content: '📋 Plan';
         font-size: 0.68rem;
       }
+
+      /* Hide PWA install on mobile — frees space for user pill */
+      #btn-pwa-install { display: none !important; }
 
       
       /* Currency trigger: smaller */
@@ -2711,6 +2811,11 @@
       <div class="form-group">
         <label>Description</label>
         <input type="text" id="tx-desc" placeholder="e.g. Monthly Salary" maxlength="60"/>
+      </div>
+
+      <div class="form-group">
+        <label>Notes <span style="color:var(--muted);font-weight:400;font-size:0.78rem;">(optional)</span></label>
+        <textarea id="tx-notes" placeholder="e.g. Paid via UPI, split with Rahul…" maxlength="200"></textarea>
       </div>
 
       <div class="form-group">
@@ -4150,21 +4255,29 @@
     const actionBtn = isImport
       ? `<div class="btn-imported" title="From bank statement — category can be changed">🔒</div>`
       : `<button class="btn-delete" onclick="deleteTransaction(${t.id})" title="Delete">✕</button>`;
-    return `<div class="tx-item${isImport ? ' tx-imported' : ''}">
-      <div class="tx-left">
-        <div class="tx-icon cat-icon-${t.cat}">${meta.icon}</div>
-        <div class="tx-info">
-          <div class="tx-name">${escHtml(t.desc)}${isImport ? '<span class="tx-bank-badge">🏦 Bank</span>' : ''}</div>
-          <div class="tx-meta">
-            <span class="tx-date">${dateF}</span>
-            <span class="cat-badge cat-${t.cat}">${meta.label}</span>
+    return `<div class="tx-item${isImport ? ' tx-imported' : ''}" id="tx-item-${t.id}" style="padding:0;overflow:hidden;">
+      <div style="display:flex;align-items:center;padding:14px 16px;">
+        <div class="tx-left">
+          <div class="tx-icon cat-icon-${t.cat}">${meta.icon}</div>
+          <div class="tx-info">
+            <div class="tx-name">${escHtml(t.desc)}${isImport ? '<span class="tx-bank-badge">🏦 Bank</span>' : ''}</div>
+            <div class="tx-meta">
+              <span class="tx-date">${dateF}</span>
+              <span class="cat-badge cat-${t.cat}">${meta.label}</span>
+            </div>
+            ${t.notes ? `<div class="tx-notes-display">📝 ${escHtml(t.notes)}</div>` : ''}
           </div>
         </div>
+        <div class="tx-right">
+          <select class="cat-select-box" onchange="changeCat(${t.id},this)" title="Change category">${opts}</select>
+          <div class="tx-amount ${t.type}">${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</div>
+          <button class="btn-note${t.notes ? ' has-note' : ''}" onclick="toggleNoteEditor(${t.id})" title="${t.notes ? 'Edit note' : 'Add note'}">📝</button>
+          ${actionBtn}
+        </div>
       </div>
-      <div class="tx-right">
-        <select class="cat-select-box" onchange="changeCat(${t.id},this)" title="Change category">${opts}</select>
-        <div class="tx-amount ${t.type}">${t.type === 'income' ? '+' : '-'}${fmt(t.amount)}</div>
-        ${actionBtn}
+      <div class="tx-note-editor" id="note-editor-${t.id}">
+        <textarea id="note-ta-${t.id}" placeholder="Add a note… e.g. Paid via UPI, split with Rahul" maxlength="200">${escHtml(t.notes || '')}</textarea>
+        <button class="tx-note-editor-save" onclick="saveNote(${t.id})">Save</button>
       </div>
     </div>`;
   }
@@ -4454,6 +4567,7 @@
     const amount = parseFloat(document.getElementById('tx-amount').value);
     const cat    = document.getElementById('tx-category').value;
     const date   = document.getElementById('tx-date').value;
+    const notes  = document.getElementById('tx-notes').value.trim();
 
     if (!desc)           return toast('⚠️ Please enter a description');
     if (!amount || isNaN(amount) || amount <= 0) return toast('⚠️ Please enter a valid amount');
@@ -4463,7 +4577,7 @@
     const tx = {
       id: Date.now(),
       type: selectedType,
-      desc, amount, cat, date,
+      desc, amount, cat, date, notes,
       source: 'manual'
     };
 
@@ -4483,10 +4597,38 @@
     // Clear form fields
     document.getElementById('tx-desc').value   = '';
     document.getElementById('tx-amount').value = '';
+    document.getElementById('tx-notes').value  = '';
     document.getElementById('tx-desc').focus();
   }
 
-  // ── DELETE ALL ──
+  // ── NOTE EDITOR ──
+  function toggleNoteEditor(id) {
+    const editor = document.getElementById(`note-editor-${id}`);
+    if (!editor) return;
+    const isOpen = editor.classList.contains('open');
+    // Close any other open editors first
+    document.querySelectorAll('.tx-note-editor.open').forEach(el => el.classList.remove('open'));
+    if (!isOpen) {
+      editor.classList.add('open');
+      const ta = document.getElementById(`note-ta-${id}`);
+      if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    }
+  }
+
+  function saveNote(id) {
+    const ta = document.getElementById(`note-ta-${id}`);
+    if (!ta) return;
+    const tx = transactions.find(t => t.id === id);
+    if (!tx) return;
+    tx.notes = ta.value.trim();
+    save();
+    // Close editor and re-render just this item
+    const item = document.getElementById(`tx-item-${id}`);
+    if (item) {
+      item.outerHTML = _buildTxItemHTML(tx);
+    }
+    toast('📝 Note saved!');
+  }
   // ── Modal helpers: lock body scroll so modal always appears centred on screen ──
   function openModal(id) {
     const overlay = document.getElementById(id);
