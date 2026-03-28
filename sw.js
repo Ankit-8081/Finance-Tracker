@@ -1,9 +1,10 @@
+// FinanceTracker Service Worker v3
 // Strategy:
 //   - App shell (index.html)  → cache-first
 //   - CDN assets               → stale-while-revalidate
 //   - Firebase / auth / DB     → network-only (never cache tokens)
 
-const SW_VERSION  = 'ft-v3.0';
+const SW_VERSION  = 'ft-v3.1';          // ← bump this on every deploy
 const SHELL_CACHE = SW_VERSION + '-shell';
 const CDN_CACHE   = SW_VERSION + '-cdn';
 
@@ -35,12 +36,12 @@ const FIREBASE_HOSTS = [
 
 // ── Install: pre-cache the app shell ──
 self.addEventListener('install', e => {
-  console.log('[SW] Installing ft-v5...');
+  console.log('[SW] Installing', SW_VERSION, '...');
+  // Skip waiting immediately so the new SW takes over ASAP
   self.skipWaiting();
   e.waitUntil(
     caches.open(SHELL_CACHE).then(cache => {
       console.log('[SW] Caching shell assets');
-      // addAll fails if ANY asset 404s — use individual puts to be resilient
       return Promise.allSettled(
         SHELL_ASSETS.map(url =>
           fetch(url).then(res => {
@@ -52,9 +53,9 @@ self.addEventListener('install', e => {
   );
 });
 
-// ── Activate: purge stale caches ──
+// ── Activate: purge stale caches, then tell all tabs to reload ──
 self.addEventListener('activate', e => {
-  console.log('[SW] Activating ft-v5...');
+  console.log('[SW] Activating', SW_VERSION, '...');
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
@@ -66,12 +67,19 @@ self.addEventListener('activate', e => {
           })
       ))
       .then(() => self.clients.claim())
+      .then(() => {
+        // Broadcast UPDATE_AVAILABLE to every open tab
+        return self.clients.matchAll({ type: 'window' }).then(clients => {
+          clients.forEach(client => {
+            client.postMessage({ type: 'SW_UPDATED', version: SW_VERSION });
+          });
+        });
+      })
   );
 });
 
 // ── Fetch: route by origin ──
 self.addEventListener('fetch', e => {
-  // Only handle GET requests
   if (e.request.method !== 'GET') return;
 
   const url = new URL(e.request.url);
@@ -104,7 +112,6 @@ self.addEventListener('fetch', e => {
       caches.match(e.request)
         .then(cached => {
           if (cached) {
-            // Serve cached, update in background
             fetch(e.request).then(res => {
               if (res && res.ok) {
                 caches.open(SHELL_CACHE).then(c => c.put(e.request, res));
@@ -112,7 +119,6 @@ self.addEventListener('fetch', e => {
             }).catch(() => {});
             return cached;
           }
-          // Not cached — fetch and cache
           return fetch(e.request)
             .then(res => {
               if (res && res.ok) {
