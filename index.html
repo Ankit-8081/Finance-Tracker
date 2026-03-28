@@ -6844,17 +6844,38 @@
       navigator.serviceWorker.register('/Finance-Tracker/sw.js', { scope: '/Finance-Tracker/' })
         .then(reg => {
           console.log('[SW] Registered:', reg.scope);
+
+          // When a new SW is found, tell it to skip waiting immediately
           reg.addEventListener('updatefound', () => {
-            const nw = reg.installing;
-            nw && nw.addEventListener('statechange', () => {
-              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-                const el = document.getElementById('toast');
-                if (el) { el.textContent = '🔄 Update available — reload'; el.classList.add('show'); }
+            const newWorker = reg.installing;
+            newWorker && newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
               }
             });
           });
+
+          // Poll for updates every 60s while the app is open
+          setInterval(() => reg.update(), 60 * 1000);
         })
         .catch(err => console.warn('[SW] Registration failed:', err));
+
+      // When SW broadcasts SW_UPDATED, reload the page automatically
+      navigator.serviceWorker.addEventListener('message', e => {
+        if (e.data && e.data.type === 'SW_UPDATED') {
+          console.log('[App] New version active:', e.data.version, '— reloading…');
+          window.location.reload();
+        }
+      });
+
+      // Handles tabs that were already open when SW took control
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
     });
   }
 
