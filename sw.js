@@ -1,10 +1,10 @@
-// FinanceTracker Service Worker v3
+// FinanceTracker Service Worker 
 // Strategy:
 //   - App shell (index.html)  → cache-first
 //   - CDN assets               → stale-while-revalidate
 //   - Firebase / auth / DB     → network-only (never cache tokens)
 
-const SW_VERSION  = 'ft-v3.1';          // ← bump this on every deploy
+const SW_VERSION  = 'ft-v3.2';          // ← bump this on every deploy
 const SHELL_CACHE = SW_VERSION + '-shell';
 const CDN_CACHE   = SW_VERSION + '-cdn';
 
