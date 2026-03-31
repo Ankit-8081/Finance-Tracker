@@ -8,7 +8,7 @@ A full-featured personal finance tracker that runs entirely in your browser. Imp
 
 ## ✨ What's New (v2.0)
 
-- 🔐 **Firebase Auth** — sign in with Google or email/password; data syncs across all your devices
+- 🔐 **Firebase Auth** — sign in with Google or email/password; data syncs across all your devices.
 - 🔒 **AES-GCM client-side encryption** — transaction descriptions and categories are encrypted in your browser before being saved to Firebase; the server never sees plaintext data
 - 🤖 **Gemini AI Assistant** — floating chat assistant powered by Gemini 2.0 Flash; asks about your spending, gets budget advice, and can add transactions or create categories by voice command
 - 📊 **Analytics page** — four deep-dive charts: Monthly Trends, Day-of-Week Heatmap, Month-on-Month Comparison, and Net Worth Over Time
