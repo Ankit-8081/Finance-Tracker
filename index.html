@@ -4284,7 +4284,7 @@
       </div>
     </div>`;
   }
-  
+
   function _renderTxPage(replace = false) {
     const el    = document.getElementById('tx-list');
     const start = (_txPage - 1) * TX_PER_PAGE;
@@ -6569,8 +6569,8 @@
   }
 
   // ── OTP SEND ──
-  const OTP_SEND_URL   = 'https://asia-southeast1-task-list-tracker-e80d4.cloudfunctions.net/sendOTP';
-  const OTP_VERIFY_URL = 'https://asia-southeast1-task-list-tracker-e80d4.cloudfunctions.net/verifyOTP';
+  const OTP_SEND_URL   = 'https://asia-southeast1-finance-manager8081.cloudfunctions.net/sendOTP';
+const OTP_VERIFY_URL = 'https://asia-southeast1-finance-manager8081.cloudfunctions.net/verifyOTP';
 
   async function sendOTPCode() {
     const user = fbAuth.currentUser;
@@ -6612,7 +6612,8 @@
   async function submitOTPReauth() {
     const otp  = document.getElementById('reauth-otp-input').value.trim();
     if (otp.length !== 6) return showReauthMsg('Please enter the 6-digit code.');
-    const user = fbAuth.currentUser;
+    const user       = fbAuth.currentUser;
+    const savedDbRef = userDbRef; // capture before signInWithCustomToken fires onAuthStateChanged
     if (!user) return showReauthMsg('Not signed in.');
     const btn = document.getElementById('btn-otp-submit');
     btn.disabled = true;
@@ -6626,10 +6627,14 @@
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Verification failed');
-      // Re-authenticate with the custom token from the server
-      await fbAuth.signInWithCustomToken(data.customToken);
-      // Now delete the account
-      await executeDeleteAccount();
+      // Sign in with custom token to satisfy Firebase "recent login" requirement
+      const cred = await fbAuth.signInWithCustomToken(data.customToken);
+      // Use the freshly authenticated user object + saved DB ref directly
+      if (savedDbRef) await savedDbRef.remove();
+      await cred.user.delete();
+      closeReauth();
+      closeProfile();
+      toast('👋 Account deleted. Goodbye!');
     } catch(e) {
       showReauthMsg(e.message);
       btn.disabled = false;
