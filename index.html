@@ -4259,7 +4259,7 @@
       ? `<div class="btn-imported" title="From bank statement — category can be changed">🔒</div>`
       : `<button class="btn-delete" onclick="deleteTransaction(${t.id})" title="Delete">✕</button>`;
     return `<div class="tx-item${isImport ? ' tx-imported' : ''}" id="tx-item-${t.id}" style="padding:0;overflow:hidden;">
-      <div style="display:flex;align-items:center;padding:14px 16px;">
+      <div style="display:flex;align-items:center;padding:14px 16px;width:100%;box-sizing:border-box;">
         <div class="tx-left">
           <div class="tx-icon cat-icon-${t.cat}">${meta.icon}</div>
           <div class="tx-info">
@@ -4284,7 +4284,7 @@
       </div>
     </div>`;
   }
-
+  
   function _renderTxPage(replace = false) {
     const el    = document.getElementById('tx-list');
     const start = (_txPage - 1) * TX_PER_PAGE;
@@ -6490,39 +6490,46 @@
   // ── REAUTH ──
   function openReauth(action, prefillPass = '') {
     reauthAction = action;
-    const titleEl  = document.getElementById('reauth-title');
-    const subEl    = document.getElementById('reauth-sub');
-    const btnEl    = document.getElementById('btn-reauth-submit');
+    const titleEl     = document.getElementById('reauth-title');
+    const subEl       = document.getElementById('reauth-sub');
+    const btnEl       = document.getElementById('btn-reauth-submit');
     const passField   = document.getElementById('reauth-pass-field');
     const googleField = document.getElementById('reauth-google-field');
+    const otpField    = document.getElementById('reauth-otp-field');
+    const actionsRow  = document.getElementById('reauth-actions-row');
 
-    // Detect provider
-    const user = fbAuth.currentUser;
+    // Hide all fields first
+    passField.style.display   = 'none';
+    googleField.style.display = 'none';
+    otpField.style.display    = 'none';
+    btnEl.style.display       = 'block';
+    actionsRow.style.display  = 'flex';
+    document.getElementById('btn-otp-submit').style.display = 'none';
+    document.getElementById('reauth-otp-input').value = '';
+    document.getElementById('reauth-otp-hint').textContent = '';
+
+    const user     = fbAuth.currentUser;
     const isGoogle = user && user.providerData.some(p => p.providerId === 'google.com');
 
     if (action === 'delete') {
+      // DELETE always uses OTP — works for both email & Google users
       titleEl.textContent = '⚠️ Delete Account';
-      subEl.textContent   = isGoogle
-        ? 'This is permanent. Re-authenticate with Google to confirm deletion of your account and all data.'
-        : 'This is permanent. Enter your password to confirm deletion of your account and all data.';
-      btnEl.textContent   = '🗑 Yes, Delete Account';
+      subEl.textContent   = 'This is permanent. We\'ll send a verification code to your email to confirm.';
+      otpField.style.display   = 'block';
+      actionsRow.style.display = 'none'; // OTP field has its own buttons
     } else {
+      // Password change — use existing password / Google flow
       titleEl.textContent = '🔒 Confirm Password Change';
       subEl.textContent   = 'Re-enter your current password to authorise this change.';
       btnEl.textContent   = '✅ Change Password';
-    }
-
-    // Show correct auth method
-    if (isGoogle) {
-      passField.style.display   = 'none';
-      googleField.style.display = 'block';
-      btnEl.style.display       = 'none'; // Google users use the Google button
-    } else {
-      passField.style.display   = 'block';
-      googleField.style.display = 'none';
-      btnEl.style.display       = 'block';
-      document.getElementById('reauth-pass').value = prefillPass || '';
-      setTimeout(() => document.getElementById('reauth-pass').focus(), 80);
+      if (isGoogle) {
+        googleField.style.display = 'block';
+        btnEl.style.display       = 'none';
+      } else {
+        passField.style.display = 'block';
+        document.getElementById('reauth-pass').value = prefillPass || '';
+        setTimeout(() => document.getElementById('reauth-pass').focus(), 80);
+      }
     }
 
     clearReauthMsg();
@@ -6548,8 +6555,9 @@
     try {
       const provider = new firebase.auth.GoogleAuthProvider();
       await fbAuth.currentUser.reauthenticateWithPopup(provider);
-      if (reauthAction === 'delete') {
-        await executeDeleteAccount();
+      // Google reauth is only used for password change (delete uses OTP)
+      if (reauthAction === 'password') {
+        await executeChangePassword();
       }
     } catch (err) {
       btn.disabled = false;
@@ -6557,6 +6565,75 @@
       if (err.code !== 'auth/popup-closed-by-user') {
         showReauthMsg('Google sign-in failed: ' + (err.message || err.code));
       }
+    }
+  }
+
+  // ── OTP SEND ──
+  const OTP_SEND_URL   = 'https://asia-southeast1-task-list-tracker-e80d4.cloudfunctions.net/sendOTP';
+  const OTP_VERIFY_URL = 'https://asia-southeast1-task-list-tracker-e80d4.cloudfunctions.net/verifyOTP';
+
+  async function sendOTPCode() {
+    const user = fbAuth.currentUser;
+    if (!user) return showReauthMsg('Not signed in.');
+    const btn = document.getElementById('btn-resend-otp');
+    const hint = document.getElementById('reauth-otp-hint');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    clearReauthMsg();
+    try {
+      const res  = await fetch(OTP_SEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid, email: user.email })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
+      hint.textContent = `Code sent to ${data.maskedEmail}. Valid for 10 minutes.`;
+      document.getElementById('reauth-otp-input').focus();
+      document.getElementById('btn-otp-submit').style.display = 'block';
+      // Allow resend after 30s
+      let countdown = 30;
+      const timer = setInterval(() => {
+        countdown--;
+        btn.textContent = `Resend (${countdown}s)`;
+        if (countdown <= 0) {
+          clearInterval(timer);
+          btn.disabled = false;
+          btn.textContent = 'Resend Code';
+        }
+      }, 1000);
+    } catch(e) {
+      showReauthMsg(e.message);
+      btn.disabled = false;
+      btn.textContent = 'Send Code';
+    }
+  }
+
+  async function submitOTPReauth() {
+    const otp  = document.getElementById('reauth-otp-input').value.trim();
+    if (otp.length !== 6) return showReauthMsg('Please enter the 6-digit code.');
+    const user = fbAuth.currentUser;
+    if (!user) return showReauthMsg('Not signed in.');
+    const btn = document.getElementById('btn-otp-submit');
+    btn.disabled = true;
+    btn.textContent = 'Verifying…';
+    clearReauthMsg();
+    try {
+      const res  = await fetch(OTP_VERIFY_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid, otp })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Verification failed');
+      // Re-authenticate with the custom token from the server
+      await fbAuth.signInWithCustomToken(data.customToken);
+      // Now delete the account
+      await executeDeleteAccount();
+    } catch(e) {
+      showReauthMsg(e.message);
+      btn.disabled = false;
+      btn.textContent = '🗑 Confirm Delete Account';
     }
   }
 
@@ -6600,8 +6677,16 @@
       // onAuthStateChanged will handle UI reset
     } catch (err) {
       showReauthMsg('Could not delete account: ' + err.message);
-      document.getElementById('btn-reauth-submit').disabled = false;
-      document.getElementById('btn-reauth-submit').textContent = '🗑 Yes, Delete Account';
+      // Re-enable whichever button triggered the deletion
+      const otpBtn = document.getElementById('btn-otp-submit');
+      const reauthBtn = document.getElementById('btn-reauth-submit');
+      if (otpBtn && otpBtn.style.display !== 'none') {
+        otpBtn.disabled = false;
+        otpBtn.textContent = '🗑 Confirm Delete Account';
+      } else {
+        reauthBtn.disabled = false;
+        reauthBtn.textContent = '🗑 Yes, Delete Account';
+      }
     }
   }
 
@@ -7309,19 +7394,46 @@
     <div class="reauth-title" id="reauth-title">Confirm Your Identity</div>
     <div class="reauth-sub" id="reauth-sub">For security, please confirm your identity to continue.</div>
     <div class="reauth-msg" id="reauth-msg"></div>
-    <!-- Password field — shown for email/password users only -->
+
+    <!-- Password field — email/password users, non-delete actions -->
     <div class="reauth-field" id="reauth-pass-field">
       <label>Password</label>
-      <input type="password" id="reauth-pass" placeholder="Your current password" onkeydown="if(event.key='Enter')submitReauth()"/>
+      <input type="password" id="reauth-pass" placeholder="Your current password" onkeydown="if(event.key==='Enter')submitReauth()"/>
     </div>
-    <!-- Google reauth button — shown for Google users only -->
+
+    <!-- Google reauth button — Google users, non-delete actions -->
     <div id="reauth-google-field" style="display:none; margin-bottom:16px;">
       <button class="btn-google-reauth" id="btn-google-reauth" onclick="submitGoogleReauth()">
         <svg width="18" height="18" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Re-authenticate with Google
       </button>
     </div>
-    <div class="reauth-actions">
+
+    <!-- OTP field — shown for DELETE action (all providers) -->
+    <div id="reauth-otp-field" style="display:none;">
+      <div class="reauth-field">
+        <label>Verification Code</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="reauth-otp-input" placeholder="Enter 6-digit code"
+            maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+            style="letter-spacing:6px;font-size:1.2rem;font-weight:700;text-align:center;"
+            onkeydown="if(event.key==='Enter')submitOTPReauth()"/>
+          <button id="btn-resend-otp" onclick="sendOTPCode()" style="
+            white-space:nowrap;padding:10px 14px;background:rgba(79,158,255,.1);
+            border:1px solid rgba(79,158,255,.35);border-radius:8px;color:var(--blue);
+            font-family:'Outfit',sans-serif;font-size:0.78rem;font-weight:700;cursor:pointer;">
+            Send Code
+          </button>
+        </div>
+        <div id="reauth-otp-hint" style="font-size:0.72rem;color:var(--muted);margin-top:6px;"></div>
+      </div>
+      <button class="btn-danger" onclick="submitOTPReauth()" id="btn-otp-submit"
+        style="width:100%;margin-top:4px;display:none;">
+        🗑 Confirm Delete Account
+      </button>
+    </div>
+
+    <div class="reauth-actions" id="reauth-actions-row">
       <button class="btn-profile-sec" onclick="closeReauth()" style="flex:1">Cancel</button>
       <button class="btn-danger" onclick="submitReauth()" style="flex:2" id="btn-reauth-submit">Confirm →</button>
     </div>
