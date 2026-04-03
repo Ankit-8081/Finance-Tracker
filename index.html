@@ -6103,9 +6103,21 @@
   // decrypted in memory). We also normalise the desc to lowercase+trimmed so
   // minor whitespace/case differences from re-imports don't create duplicates.
   // Normalize desc for dedup: lowercase, collapse whitespace, strip punctuation
-  function _dedupKey(t) {
-    const d = (t.desc||'').toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();
-    return `${t.date}|${t.type}|${Number(t.amount).toFixed(2)}|${d}`;
+function _dedupKey(t) {
+    const desc = t.desc || '';
+    // Extract UPI reference number if present (always unique per transaction)
+    const upiRef = desc.match(/UPI\/(?:DR|CR)\/(\d+)\//);
+    if (upiRef) {
+      // Use UPI ref + amount as key — immune to description wording differences
+      return `upi|${upiRef[1]}|${Number(t.amount).toFixed(2)}`;
+    }
+    // Fallback for non-UPI transactions: date + type + amount + normalised desc
+    const parts = (t.date || '').split('-');
+    const date  = parts.length === 3
+      ? `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`
+      : (t.date || '');
+    const d = desc.toLowerCase().replace(/\s+/g,' ').replace(/[^a-z0-9 ]/g,'').trim();
+    return `${date}|${t.type}|${Number(t.amount).toFixed(2)}|${d}`;
   }
 
   function confirmImport() {
